@@ -30,57 +30,16 @@ and educational purposes.
 
 ## 🧿 Techniques & Domain Expansions
 
-> ### 🔴 Reverse Cursed Technique: Red
->
-> **Hand Sign:** Index finger raised ☝️\
-> Converts negative cursed energy into a powerful repulsive explosive
-> force.
-
-------------------------------------------------------------------------
-
-> ### ♾️ Infinite Void
->
-> **Hand Sign:** Index and middle finger raised ✌️\
-> Overwhelms the opponent with infinite information, freezing their
-> ability to act.
-
-------------------------------------------------------------------------
-
-> ### 🏯 Malevolent Shrine
->
-> **Hand Sign:** All fingers extended 🖐️\
-> A barrierless domain that unleashes continuous slashing attacks.
-
-------------------------------------------------------------------------
-
-> ### 🟣 Hollow Purple
->
-> **Hand Sign:** Thumb and index finger pinched 🤏\
-> Forms an annihilating mass that erases everything in its path.
-
-------------------------------------------------------------------------
-
-> ### 🧬 Self-Embodiment of Perfection
->
-> **Hand Sign:** Thumb and pinky extended 🤙\
-> Allows direct manipulation of the opponent's soul within its domain.
-
-------------------------------------------------------------------------
-
-> ### 🎰 Idle Death Gamble
->
-> **Hand Sign:** Thumb raised 👍\
-> A probability-based domain granting limitless cursed energy upon
-> jackpot activation.
-
-------------------------------------------------------------------------
-
-> ### 🌑 Chimera Shadow Garden
->
-> **Hand Sign:** Index and pinky extended 🤘\
-> A shadow-based domain enabling shikigami summoning and shadow
-> traversal.
-
+| Hand Gesture | Technique |
+|------------------------------|-----------|
+| Pinch (thumb–index close) | 🟣Hollow Purple |
+| Thumb + pinky up 🤙 | 🧬Self-Embodiment of Perfection |
+| Index + pinky up 🤘 | 🌑Chimera Shadow Garden |
+| Thumb only 👍 | 🎰 Idle Death Gamble |
+| All fingers extended 🖐️ | 🏯Malevolent Shrine |
+| Index + middle up ✌️ | ♾️Infinite Void |
+| Index only ☝️ | 🔴Reverse Cursed Technique: Red |
+| No hand / default | Neutral (subtle blue particles) |
 ------------------------------------------------------------------------
 
 ## 🎥 Demonstration Video
