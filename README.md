@@ -110,32 +110,6 @@ Or upload the video to YouTube and embed it:
 
 ------------------------------------------------------------------------
 
-## 📂 Project Structure
-
-    Cursed-Energy/
-    │
-    ├── assets/
-    │   ├── images/
-    │   ├── videos/
-    │
-    ├── index.html
-    ├── styles.css
-    ├── script.js
-    ├── jjk.mp4
-    └── README.md
-
-------------------------------------------------------------------------
-
-## 🚀 Future Improvements
-
--   Add animated cursed energy effects\
--   Add sound design\
--   Improve UI aesthetics\
--   Add interactive hand gesture detection\
--   Deploy live version
-
-------------------------------------------------------------------------
-
 ## 👤 Author
 
 Made by **Rajnil Saha**
