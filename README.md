@@ -103,16 +103,19 @@ Or upload the video to YouTube and embed it:
 
 ## 🛠️ Tech Stack
 
--   HTML5\
--   CSS3\
--   JavaScript\
--   Media assets (MP4 video integration)
+## 🚀 Tech Stack
 
-------------------------------------------------------------------------
+* **Frontend Framework:** React 18 (with Vite)
+* **Language:** TypeScript
+* **Styling:** Tailwind CSS
+* **UI Components:** shadcn/ui (built on Radix UI)
+* **3D Graphics:** Three.js
+* **Hand Tracking / Computer Vision:** MediaPipe Hands
+* **Routing:** React Router
+* **Data Fetching & State Management:** TanStack Query
+* **Form Handling:** React Hook Form
+* **Validation:** Zod
 
-## 👤 Author
-
-Made by **Rajnil Saha**
 
 ------------------------------------------------------------------------
 
@@ -133,6 +136,3 @@ creators.
 
 ------------------------------------------------------------------------
 
-## ⭐ Support
-
-If you like this project, consider giving it a ⭐ on GitHub!
