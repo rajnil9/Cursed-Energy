@@ -30,11 +30,8 @@ export default function Landing() {
 
   return (
     <div className="landing-root">
-      {/* Full-screen background image – only the artwork */}
+      {/* Full-screen still background image – put your image in public/landing-bg.png */}
       <div className="landing-bg-image" />
-
-      {/* Very light center darkening so title/buttons stay readable */}
-      <div className="landing-vignette" />
 
       {/* Content: title at top center, buttons in center of screen */}
       <div className={`landing-content ${loaded ? "loaded" : ""}`}>

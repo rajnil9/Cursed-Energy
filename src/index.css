@@ -101,7 +101,7 @@
   /* No background-color: image only */
 }
 
-/* Full-screen background: image only, no solid color */
+/* Full-screen still background image – replace public/landing-bg.png with your image */
 .landing-bg-image {
   position: absolute;
   inset: 0;
@@ -109,20 +109,10 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-image: url("/gojo-sukuna-bg.png");
+  background-image: url("/landing-bg.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  animation: landing-bg-zoom 25s ease-in-out infinite;
-}
-
-/* Optional: very subtle overlay only if needed – max 20% black */
-.landing-vignette {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(ellipse 85% 90% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.12) 100%);
 }
 
 .landing-content {
