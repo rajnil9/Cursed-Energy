@@ -1,7 +1,7 @@
 const gestures = [
   { name: "Reverse Cursed Technique: Red", gesture: "☝️ Index finger up only", color: "#ff3333" },
   { name: "Infinite Void", gesture: "✌️ Index + Middle up", color: "#00ffff" },
-  { name: "Malevolent Shrine", gesture: "🖐️ All fingers extended", color: "#ff0000" },
+  { name: "Malevolent Shrine", gesture: "🖖 Middle + Ring up (Enmaten)", color: "#ff0000" },
   { name: "Hollow Purple", gesture: "🤏 Pinch (thumb + index)", color: "#bb00ff" },
   { name: "Self-Embodiment of Perfection", gesture: "🤙 Thumb + Pinky up", color: "#00ccaa" },
   { name: "Idle Death Gamble", gesture: "👍 Thumb up only", color: "#ffaa00" },

@@ -387,7 +387,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
                 detected = "hakari";
               } else if (indexUp && middleUp && ringUp && !pinkyUp) {
                 detected = "dismantle";
-              } else if (indexUp && middleUp && ringUp && pinkyUp) {
+              } else if (!indexUp && middleUp && ringUp && !pinkyUp) {
                 detected = "shrine";
               } else if (indexUp && middleUp && !ringUp) {
                 detected = "void";

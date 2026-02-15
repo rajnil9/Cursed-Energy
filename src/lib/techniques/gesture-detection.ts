@@ -57,12 +57,13 @@ export function isDismantleGesture(lm: Landmark[]): boolean {
   );
 }
 
+/** Sukuna's Malevolent Shrine – Enmaten (Enma Ten-In): middle & ring extended, index & pinky curled */
 export function isShrineGesture(lm: Landmark[]): boolean {
   return (
-    isFingerUp(lm, 8, 6) &&
+    isFingerNotUp(lm, 8, 6) &&
     isFingerUp(lm, 12, 10) &&
     isFingerUp(lm, 16, 14) &&
-    isFingerUp(lm, 20, 18)
+    isFingerNotUp(lm, 20, 18)
   );
 }
 
