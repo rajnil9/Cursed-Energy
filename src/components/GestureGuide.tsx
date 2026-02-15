@@ -4,7 +4,7 @@ const gestures = [
   { name: "Malevolent Shrine", gesture: "🖖 Middle + Ring up", color: "#ff0000" },
   { name: "Hollow Purple", gesture: "🤏 Pinch + Middle up", color: "#bb00ff" },
   { name: "Self-Embodiment of Perfection", gesture: "🤙 Thumb + Pinky up", color: "#00ccaa" },
-  { name: "Idle Death Gamble", gesture: "👍 Thumb up only", color: "#ffaa00" },
+  { name: "Idle Death Gamble", gesture: "👍 Thumbs up (fist + thumb up)", color: "#ffaa00" },
   { name: "Chimera Shadow Garden", gesture: "🤘 Index + Pinky up", color: "#6633aa" },
   { name: "Black Flash", gesture: "✊ Fist (all fingers closed)", color: "#ff1a1a" },
   { name: "Dismantle", gesture: "🤟 Index + Middle + Ring up", color: "#8b0000" },

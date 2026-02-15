@@ -528,28 +528,30 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
             const middleDown = isDownLm(12, 10);
             const ringDown = isDownLm(16, 14);
             const pinkyDown = isDownLm(20, 18);
-            const thumbUp = lm[4].y < lm[3].y - 0.02 && lm[4].y < lm[2].y;
+            const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
             const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
 
             const wrist = lm[0];
             const isCurled = (tip: number) => {
               const d = Math.hypot(lm[tip].x - wrist.x, lm[tip].y - wrist.y);
-              return d < 0.22;
+              return d < 0.24;
             };
             const allCurled = isCurled(8) && isCurled(12) && isCurled(16) && isCurled(20);
             const isFist = allCurled && indexDown && middleDown && ringDown && pinkyDown;
+            const middleUpRelaxed = lm[10].y - lm[12].y > 0.008;
 
-            if (isFist) {
+            if (thumbUp && allCurled) {
+              fistFrames = 0;
+              detected = "hakari";
+            } else if (isFist) {
               fistFrames++;
               if (fistFrames >= FIST_CONFIRM_FRAMES) detected = "blackflash";
             } else {
               fistFrames = 0;
-              if (pinch < 0.055 && middleUp && ringDown && pinkyDown) {
+              if (pinch < 0.09 && middleUpRelaxed && ringDown && pinkyDown) {
                 detected = "purple";
               } else if (thumbUp && indexDown && middleDown && ringDown && pinkyUp) {
                 detected = "mahito";
-              } else if (thumbUp && indexDown && middleDown && ringDown && pinkyDown) {
-                detected = "hakari";
               } else if (indexUp && middleDown && ringDown && pinkyUp) {
                 detected = "megumi";
               } else if (indexUp && middleUp && ringUp && pinkyDown) {
