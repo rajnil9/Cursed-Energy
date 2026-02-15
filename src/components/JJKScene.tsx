@@ -4,6 +4,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { getBlackFlash, BLACK_FLASH_CONFIG } from "@/lib/techniques/black-flash";
+import { getBlood, BLOOD_CONFIG } from "@/lib/techniques/blood";
 import { getDismantle, DISMANTLE_CONFIG } from "@/lib/techniques/dismantle";
 
 declare global {
@@ -257,11 +258,13 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
     let glowColor = "#00ffff";
     let animId: number;
     let fistFrames = 0;
+    let bloodStartTime = 0;
     const FIST_CONFIRM_FRAMES = 3;
 
     function updateState(tech: string) {
       if (currentTech === tech) return;
       currentTech = tech;
+      if (tech === "blood") bloodStartTime = performance.now() / 1000;
       shakeIntensity = tech !== "neutral" ? 0.4 : 0;
 
       const map: Record<string, { color: string; name: string; bloom: number }> = {
@@ -274,6 +277,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         megumi: { color: "#6633aa", name: "Domain Expansion: Chimera Shadow Garden", bloom: 1.5 },
         blackflash: { color: BLACK_FLASH_CONFIG.color, name: BLACK_FLASH_CONFIG.name, bloom: BLACK_FLASH_CONFIG.bloom },
         dismantle: { color: DISMANTLE_CONFIG.color, name: DISMANTLE_CONFIG.name, bloom: DISMANTLE_CONFIG.bloom },
+        blood: { color: BLOOD_CONFIG.color, name: BLOOD_CONFIG.name, bloom: BLOOD_CONFIG.bloom },
         neutral: { color: "#00ffff", name: "Neutral State", bloom: 1.0 },
       };
 
@@ -293,6 +297,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
           case "megumi": return getMegumi(i);
           case "blackflash": return getBlackFlash(i, COUNT);
           case "dismantle": return getDismantle(i, COUNT);
+          case "blood": return getBlood(i, COUNT, 0);
           default:
             if (i < COUNT * 0.05) {
               const r = 15 + Math.random() * 20;
@@ -355,18 +360,46 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         }
         onHandScreenPositionsRef.current?.(screenPoints);
 
-        if (results.multiHandLandmarks) {
+        const isUp = (lm: any, tip: number, pip: number) => lm[tip].y < lm[pip].y;
+        const allFingersExtended = (lm: any) => {
+          const indexUp = isUp(lm, 8, 6);
+          const middleUp = isUp(lm, 12, 10);
+          const ringUp = isUp(lm, 16, 14);
+          const pinkyUp = isUp(lm, 20, 18);
+          const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
+          return indexUp && middleUp && ringUp && pinkyUp && thumbUp;
+        };
+        const PALM_PROXIMITY = 0.22;
+
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length === 2) {
+          const lm1 = results.multiHandLandmarks[0];
+          const lm2 = results.multiHandLandmarks[1];
+          if (allFingersExtended(lm1) && allFingersExtended(lm2)) {
+            const palm1 = lm1[9];
+            const palm2 = lm2[9];
+            const palmDist = Math.hypot(palm1.x - palm2.x, palm1.y - palm2.y);
+            let avgTipDist = 0;
+            const tips = [4, 8, 12, 16, 20];
+            for (const ti of tips) {
+              avgTipDist += Math.hypot(lm1[ti].x - lm2[ti].x, lm1[ti].y - lm2[ti].y);
+            }
+            avgTipDist /= tips.length;
+            if (palmDist < PALM_PROXIMITY && avgTipDist < 0.28) detected = "blood";
+          }
+        }
+
+        if (results.multiHandLandmarks && detected !== "blood") {
           results.multiHandLandmarks.forEach((lm: any) => {
             window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
             window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
 
-            const isUp = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
+            const isUpLm = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
             const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
 
-            const indexUp = isUp(8, 6);
-            const middleUp = isUp(12, 10);
-            const ringUp = isUp(16, 14);
-            const pinkyUp = isUp(20, 18);
+            const indexUp = isUpLm(8, 6);
+            const middleUp = isUpLm(12, 10);
+            const ringUp = isUpLm(16, 14);
+            const pinkyUp = isUpLm(20, 18);
             const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
 
             const wrist = lm[0];
@@ -401,6 +434,11 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
               }
             }
           });
+        } else if (results.multiHandLandmarks) {
+          results.multiHandLandmarks.forEach((lm: any) => {
+            window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
+            window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
+          });
         }
         updateState(detected);
       });
@@ -434,6 +472,20 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       const col = particles.geometry.attributes.color.array as Float32Array;
       const siz = particles.geometry.attributes.size.array as Float32Array;
 
+      if (currentTech === "blood") {
+        const t = performance.now() / 1000 - bloodStartTime;
+        for (let i = 0; i < COUNT; i++) {
+          const p = getBlood(i, COUNT, t);
+          targetPositions[i * 3] = p.x;
+          targetPositions[i * 3 + 1] = p.y;
+          targetPositions[i * 3 + 2] = p.z;
+          targetColors[i * 3] = p.r;
+          targetColors[i * 3 + 1] = p.g;
+          targetColors[i * 3 + 2] = p.b;
+          targetSizes[i] = p.s;
+        }
+      }
+
       for (let i = 0; i < COUNT * 3; i++) {
         pos[i] += (targetPositions[i] - pos[i]) * 0.1;
         col[i] += (targetColors[i] - col[i]) * 0.1;
@@ -462,6 +514,9 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       } else if (currentTech === "dismantle") {
         particles.rotation.y += 0.003;
         particles.rotation.z += 0.002;
+      } else if (currentTech === "blood") {
+        particles.rotation.y += 0.02;
+        particles.rotation.x += 0.01;
       } else {
         particles.rotation.y += 0.005;
       }

@@ -8,6 +8,7 @@ const gestures = [
   { name: "Chimera Shadow Garden", gesture: "🤘 Index + Pinky up", color: "#6633aa" },
   { name: "Black Flash", gesture: "✊ Fist (all fingers closed)", color: "#ff1a1a" },
   { name: "Dismantle", gesture: "🤟 Index + Middle + Ring up", color: "#8b0000" },
+  { name: "Blood Manipulation", gesture: "🖐️🖐️ Two hands, all fingers up, palms close", color: "#6B0F1A" },
 ];
 
 const GestureGuide = () => {

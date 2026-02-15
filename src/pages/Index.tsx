@@ -7,7 +7,7 @@ const Index = () => {
   const [glowColor, setGlowColor] = useState("#00ffff");
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-background">
+    <div className={`relative w-screen h-screen overflow-hidden bg-background ${techniqueName === "Blood Manipulation" ? "technique-blood" : ""}`}>
       <div className="grain-overlay" />
 
       {/* UI Overlay */}
