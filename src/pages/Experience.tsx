@@ -59,7 +59,7 @@ const Experience = () => {
   }, []);
 
   return (
-    <div className={`relative w-screen h-screen overflow-hidden bg-background ${techniqueName === "Blood Manipulation" ? "technique-blood" : ""}`}>
+    <div className="relative w-screen h-screen overflow-hidden bg-background">
       <div className="grain-overlay" />
 
       {/* Back — top-right, mouse + hand hover glow */}
