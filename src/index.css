@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Zen+Antique+Soft&family=Rajdhani:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Antique+Soft&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap');
 
 @layer base {
   :root {
@@ -89,4 +89,268 @@
   background: hsla(0, 0%, 0%, 0.7);
   border: 1px solid hsla(0, 0%, 100%, 0.1);
   backdrop-filter: blur(10px);
+}
+
+/* ─── Landing page: cinematic JJK theme ───────────────────── */
+.landing-root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #030204;
+  cursor: none;
+}
+
+.landing-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-fog {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 50%, transparent 0%, rgba(60, 0, 80, 0.12) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+  animation: landing-fog-drift 12s ease-in-out infinite;
+}
+
+.landing-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.landing-kanji {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.landing-kanji-char {
+  position: absolute;
+  font-family: 'Zen Antique Soft', serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  color: rgba(120, 40, 140, 0.08);
+  animation: landing-kanji-float 20s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -2.5s);
+}
+
+.landing-kanji-char:nth-child(1) { left: 8%; top: 12%; }
+.landing-kanji-char:nth-child(2) { right: 15%; top: 25%; }
+.landing-kanji-char:nth-child(3) { left: 20%; bottom: 30%; }
+.landing-kanji-char:nth-child(4) { right: 10%; bottom: 15%; }
+.landing-kanji-char:nth-child(5) { left: 50%; top: 8%; }
+.landing-kanji-char:nth-child(6) { right: 25%; top: 60%; }
+.landing-kanji-char:nth-child(7) { left: 12%; top: 50%; }
+.landing-kanji-char:nth-child(8) { right: 35%; bottom: 25%; }
+.landing-kanji-char:nth-child(9) { left: 45%; bottom: 10%; }
+
+.landing-pulse {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%, rgba(180, 0, 80, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 2;
+  animation: landing-ambient-pulse 4s ease-in-out infinite;
+}
+
+.landing-cursor-trail {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.cursor-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 80, 120, 0.9) 0%, rgba(120, 0, 180, 0.4) 70%, transparent 100%);
+  box-shadow: 0 0 12px rgba(200, 50, 120, 0.6);
+  transition: opacity 0.05s ease-out, transform 0.05s ease-out;
+}
+
+.landing-content {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.landing-content.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-title {
+  font-family: 'Zen Antique Soft', serif;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: #fff;
+  text-shadow:
+    0 0 20px rgba(200, 50, 100, 0.9),
+    0 0 40px rgba(140, 30, 180, 0.6),
+    0 0 60px rgba(100, 0, 150, 0.4);
+  animation: landing-title-flicker 3s ease-in-out infinite;
+  margin: 0;
+}
+
+.landing-subtitle {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.35em;
+  color: rgba(220, 180, 255, 0.95);
+  text-shadow: 0 0 15px rgba(180, 80, 220, 0.7);
+  margin: 0;
+  animation: landing-subtitle-glow 2.5s ease-in-out infinite;
+}
+
+.landing-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.landing-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  padding: 0.9rem 2.5rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 2px;
+}
+
+.landing-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.landing-btn-icon {
+  font-size: 0.85em;
+}
+
+.landing-btn-play {
+  background: transparent;
+  color: #ff3366;
+  border: 2px solid rgba(255, 50, 100, 0.8);
+  box-shadow:
+    0 0 20px rgba(255, 50, 120, 0.4),
+    inset 0 0 20px rgba(255, 50, 120, 0.05);
+}
+
+.landing-btn-play:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 35px rgba(255, 50, 120, 0.7),
+    0 0 60px rgba(180, 50, 200, 0.4),
+    inset 0 0 25px rgba(255, 50, 120, 0.1);
+  background: rgba(255, 50, 120, 0.15);
+  color: #ff5599;
+}
+
+.landing-btn-exit {
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.landing-btn-exit:hover:not(:disabled) {
+  color: rgba(255, 200, 200, 0.95);
+  box-shadow: 0 2px 0 0 rgba(200, 50, 80, 0.5);
+  background: rgba(20, 0, 10, 0.6);
+}
+
+/* Transition: crack + fade to black */
+.landing-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.landing-transition.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.landing-transition-black {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  transition: opacity 1s ease 0.2s;
+}
+
+.landing-transition.active .landing-transition-black {
+  opacity: 1;
+}
+
+.landing-transition-crack {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, rgba(80, 0, 0, 0.9) 45%, rgba(40, 0, 0, 0.98) 55%, #000 70%);
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 0.5s ease, transform 1.2s ease;
+}
+
+.landing-transition.active .landing-transition-crack {
+  opacity: 1;
+  transform: scale(1.4);
+}
+
+@keyframes landing-fog-drift {
+  0%, 100% { opacity: 0.8; transform: translate(0, 0) scale(1); }
+  50% { opacity: 1; transform: translate(2%, -1%) scale(1.02); }
+}
+
+@keyframes landing-kanji-float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.06; }
+  50% { transform: translate(5px, -8px) rotate(2deg); opacity: 0.12; }
+}
+
+@keyframes landing-ambient-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes landing-title-flicker {
+  0%, 90%, 100% { opacity: 1; text-shadow: 0 0 20px rgba(200, 50, 100, 0.9), 0 0 40px rgba(140, 30, 180, 0.6); }
+  92% { opacity: 0.92; text-shadow: 0 0 25px rgba(220, 60, 120, 1), 0 0 50px rgba(160, 40, 200, 0.8); }
+  95% { opacity: 1; }
+}
+
+@keyframes landing-subtitle-glow {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; text-shadow: 0 0 20px rgba(180, 80, 220, 0.8); }
 }
