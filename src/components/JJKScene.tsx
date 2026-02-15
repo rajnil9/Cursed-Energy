@@ -6,7 +6,7 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { getBlackFlash, BLACK_FLASH_CONFIG } from "@/lib/techniques/black-flash";
 import { getBlood, BLOOD_CONFIG } from "@/lib/techniques/blood";
 import { getDismantle, DISMANTLE_CONFIG } from "@/lib/techniques/dismantle";
-import { createChimeraShadowPlane, updateChimeraShadowPlane } from "@/lib/techniques/chimera-shadow-domain";
+import { createChimeraShadowPlane, updateChimeraShadowPlane, createChimeraShadowTendrils, updateChimeraShadowTendrils } from "@/lib/techniques/chimera-shadow-domain";
 
 declare global {
   interface Window {
@@ -196,10 +196,13 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
     );
     scene.add(particles);
 
-    // Chimera Shadow Garden: liquid shadow plane (replaces particles for megumi)
+    // Chimera Shadow Garden: liquid shadow plane + rising tendrils
     const chimeraShadowPlane = createChimeraShadowPlane();
+    const chimeraShadowTendrils = createChimeraShadowTendrils();
     scene.add(chimeraShadowPlane);
+    scene.add(chimeraShadowTendrils);
     let megumiExpansion = 0;
+    let chimeraDomainTime = 0;
     let lastAnimateTime = performance.now() / 1000;
     let savedSceneBackground: THREE.Color | null = null;
     const CHIMERA_EXPAND_SPEED = 0.028;
@@ -252,6 +255,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         savedSceneBackground = scene.background as THREE.Color | null;
         scene.background = new THREE.Color(0.028, 0.025, 0.045);
         chimeraShadowPlane.visible = true;
+        chimeraShadowTendrils.visible = true;
       } else if (wasMegumi) {
         if (savedSceneBackground !== null) scene.background = savedSceneBackground;
         savedSceneBackground = null;
