@@ -6,8 +6,6 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { getBlackFlash, BLACK_FLASH_CONFIG } from "@/lib/techniques/black-flash";
 import { getBlood, BLOOD_CONFIG } from "@/lib/techniques/blood";
 import { getDismantle, DISMANTLE_CONFIG } from "@/lib/techniques/dismantle";
-import { createChimeraShadowPlane, updateChimeraShadowPlane, createChimeraShadowTendrils, updateChimeraShadowTendrils } from "@/lib/techniques/chimera-shadow-domain";
-
 declare global {
   interface Window {
     Hands: any;
@@ -142,6 +140,63 @@ function getHakari(i: number) {
   return { x: 0, y: 0, z: 0, r: 0, g: 0, b: 0, s: 0 };
 }
 
+// Megumi - Chimera Shadow Garden (original particle effect)
+function getMegumi(i: number) {
+  const t = i / COUNT;
+  if (i < COUNT * 0.3) {
+    const radius = Math.random() * 40;
+    const angle = Math.random() * Math.PI * 2;
+    return { x: radius * Math.cos(angle), y: -18 + Math.random() * 2, z: radius * Math.sin(angle), r: 0.06, g: 0.01, b: 0.12, s: 1.0 };
+  }
+  if (i < COUNT * 0.5) {
+    const tendril = i % 8;
+    const tendrilAngle = (tendril / 8) * Math.PI * 2;
+    const height = (t - 0.3) * 5 * 40;
+    const sway = Math.sin(height * 0.1 + tendril) * 3;
+    const dist = 10 + tendril * 2;
+    return {
+      x: dist * Math.cos(tendrilAngle) + sway,
+      y: -18 + height,
+      z: dist * Math.sin(tendrilAngle) + sway * 0.5,
+      r: 0.18,
+      g: 0.04,
+      b: 0.28,
+      s: 1.5,
+    };
+  }
+  if (i < COUNT * 0.65) {
+    const beast = i % 3;
+    const bx = [20, -15, 0][beast];
+    const bz = [10, -10, 20][beast];
+    const r = Math.random() * 8;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    return {
+      x: bx + r * Math.sin(phi) * Math.cos(theta),
+      y: -5 + r * Math.sin(phi) * Math.sin(theta) * 1.5,
+      z: bz + r * Math.cos(phi),
+      r: 0.1,
+      g: 0,
+      b: 0.15,
+      s: 1.8,
+    };
+  }
+  if (i < COUNT * 0.8) {
+    const radius = 15 + Math.random() * 50;
+    const theta = Math.random() * Math.PI * 2;
+    return {
+      x: radius * Math.cos(theta),
+      y: (Math.random() - 0.5) * 40,
+      z: radius * Math.sin(theta),
+      r: 0.08,
+      g: 0.02,
+      b: 0.12,
+      s: 0.4,
+    };
+  }
+  return { x: 0, y: 0, z: 0, r: 0, g: 0, b: 0, s: 0 };
+}
+
 export type HandScreenPoint = { x: number; y: number };
 
 interface Props {
@@ -196,17 +251,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
     );
     scene.add(particles);
 
-    // Chimera Shadow Garden: liquid shadow plane + rising tendrils
-    const chimeraShadowPlane = createChimeraShadowPlane();
-    const chimeraShadowTendrils = createChimeraShadowTendrils();
-    scene.add(chimeraShadowPlane);
-    scene.add(chimeraShadowTendrils);
-    let megumiExpansion = 0;
-    let chimeraDomainTime = 0;
     let lastAnimateTime = performance.now() / 1000;
-    let savedSceneBackground: THREE.Color | null = null;
-    const CHIMERA_EXPAND_SPEED = 0.028;
-    const CHIMERA_RETRACT_SPEED = 0.035;
 
     // ─── State ───────────────────────────────────────
     let currentTech = "neutral";
@@ -246,20 +291,9 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
 
     function updateState(tech: string) {
       if (currentTech === tech) return;
-      const wasMegumi = currentTech === "megumi";
       currentTech = tech;
       if (tech === "blood") bloodStartTime = performance.now() / 1000;
       shakeIntensity = tech !== "neutral" ? 0.4 : 0;
-
-      if (tech === "megumi") {
-        savedSceneBackground = scene.background as THREE.Color | null;
-        scene.background = new THREE.Color(0.028, 0.025, 0.045);
-        chimeraShadowPlane.visible = true;
-        chimeraShadowTendrils.visible = true;
-      } else if (wasMegumi) {
-        if (savedSceneBackground !== null) scene.background = savedSceneBackground;
-        savedSceneBackground = null;
-      }
 
       const map: Record<string, { color: string; name: string; bloom: number }> = {
         shrine: { color: "#ff0000", name: "Domain Expansion: Malevolent Shrine", bloom: 2.5 },
@@ -289,7 +323,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
           case "shrine": return getShrine(i);
           case "mahito": return getMahito(i);
           case "hakari": return getHakari(i);
-          case "megumi": return { x: 0, y: 0, z: 0, r: 0, g: 0, b: 0, s: 0 };
+          case "megumi": return getMegumi(i);
           case "blackflash": return getBlackFlash(i, COUNT);
           case "dismantle": return getDismantle(i, COUNT);
           case "blood": return getBlood(i, COUNT, bloodOrigin, bloodDirSmooth);
@@ -573,29 +607,6 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       const now = performance.now() / 1000;
       const deltaTime = Math.min(now - lastAnimateTime, 0.1);
       lastAnimateTime = now;
-
-      if (currentTech === "megumi") {
-        megumiExpansion = Math.min(1, megumiExpansion + CHIMERA_EXPAND_SPEED);
-        chimeraDomainTime += deltaTime;
-        chimeraShadowPlane.scale.set(megumiExpansion, 1, megumiExpansion);
-        chimeraShadowTendrils.scale.set(megumiExpansion, 1, megumiExpansion);
-        updateChimeraShadowPlane(chimeraShadowPlane, deltaTime, megumiExpansion, true);
-        updateChimeraShadowTendrils(chimeraShadowTendrils, chimeraDomainTime, megumiExpansion);
-      } else {
-        if (megumiExpansion > 0) {
-          megumiExpansion = Math.max(0, megumiExpansion - CHIMERA_RETRACT_SPEED);
-          chimeraDomainTime += deltaTime;
-          chimeraShadowPlane.scale.set(megumiExpansion, 1, megumiExpansion);
-          chimeraShadowTendrils.scale.set(megumiExpansion, 1, megumiExpansion);
-          updateChimeraShadowPlane(chimeraShadowPlane, deltaTime, megumiExpansion, false);
-          updateChimeraShadowTendrils(chimeraShadowTendrils, chimeraDomainTime, megumiExpansion);
-          if (megumiExpansion < 0.01) {
-            megumiExpansion = 0;
-            chimeraShadowPlane.visible = false;
-            chimeraShadowTendrils.visible = false;
-          }
-        }
-      }
 
       if (shakeIntensity > 0) {
         renderer.domElement.style.transform = `translate(${(Math.random() - 0.5) * shakeIntensity * 40}px, ${(Math.random() - 0.5) * shakeIntensity * 40}px)`;
