@@ -36,10 +36,12 @@ export default function Landing() {
       {/* Very light center darkening so title/buttons stay readable */}
       <div className="landing-vignette" />
 
-      {/* Content: only title, subtitle, PLAY, EXIT in front of the image */}
+      {/* Content: title at top center, buttons in center of screen */}
       <div className={`landing-content ${loaded ? "loaded" : ""}`}>
-        <h1 className="landing-title">「呪術廻戦」</h1>
-        <p className="landing-subtitle">Cursed Energy Experience</p>
+        <header className="landing-header">
+          <h1 className="landing-title">「呪術廻戦」</h1>
+          <p className="landing-subtitle">Cursed Energy Experience</p>
+        </header>
 
         <div className="landing-buttons">
           <button

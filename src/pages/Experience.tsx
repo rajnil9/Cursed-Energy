@@ -21,16 +21,16 @@ const Experience = () => {
     <div className="relative w-screen h-screen overflow-hidden bg-background">
       <div className="grain-overlay" />
 
-      {/* EXIT DOMAIN — top-right */}
+      {/* EXIT — top-right, returns to home and stops camera/gestures */}
       <button
         type="button"
         className="experience-exit-btn"
         onClick={handleExitDomain}
         disabled={exiting}
-        aria-label="Exit domain and return to home"
+        aria-label="Exit and return to home"
       >
         <span className="experience-exit-btn-icon" aria-hidden>✖</span>
-        EXIT DOMAIN
+        EXIT
       </button>
 
       {/* UI Overlay */}
