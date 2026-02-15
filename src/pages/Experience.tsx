@@ -62,7 +62,7 @@ const Experience = () => {
     <div className="relative w-screen h-screen overflow-hidden bg-background">
       <div className="grain-overlay" />
 
-      {/* EXIT DOMAIN — top-right, mouse + hand hover glow */}
+      {/* Back — top-right, mouse + hand hover glow */}
       <button
         ref={exitBtnRef}
         type="button"
@@ -71,10 +71,10 @@ const Experience = () => {
         disabled={exiting}
         onMouseEnter={() => setExitMouseHover(true)}
         onMouseLeave={() => setExitMouseHover(false)}
-        aria-label="Exit domain and return to home"
+        aria-label="Go back to home"
       >
-        <span className="experience-exit-btn-icon" aria-hidden>✖</span>
-        EXIT DOMAIN
+        <span className="experience-exit-btn-icon" aria-hidden>←</span>
+        Back
       </button>
 
       {/* UI Overlay */}
