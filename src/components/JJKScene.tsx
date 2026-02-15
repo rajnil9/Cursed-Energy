@@ -261,6 +261,9 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
     let fistFrames = 0;
     let bloodStartTime = 0;
     const FIST_CONFIRM_FRAMES = 3;
+    let pendingGesture = "neutral";
+    let gestureConfirmFrames = 0;
+    const GESTURE_CONFIRM_FRAMES = 3;
 
     // Blood: palm origin and direction (Three.js space), updated from hand landmarks
     const BLOOD_SCALE = 50;
@@ -513,14 +516,20 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
             }
             if (detected === "blood") return;
 
-            const isUpLm = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
-            const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
-
+            const FINGER_UP_THRESH = 0.02;
+            const FINGER_DOWN_THRESH = 0.02;
+            const isUpLm = (tip: number, pip: number) => lm[pip].y - lm[tip].y > FINGER_UP_THRESH;
+            const isDownLm = (tip: number, pip: number) => lm[tip].y - lm[pip].y > FINGER_DOWN_THRESH;
             const indexUp = isUpLm(8, 6);
             const middleUp = isUpLm(12, 10);
             const ringUp = isUpLm(16, 14);
             const pinkyUp = isUpLm(20, 18);
-            const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
+            const indexDown = isDownLm(8, 6);
+            const middleDown = isDownLm(12, 10);
+            const ringDown = isDownLm(16, 14);
+            const pinkyDown = isDownLm(20, 18);
+            const thumbUp = lm[4].y < lm[3].y - 0.02 && lm[4].y < lm[2].y;
+            const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
 
             const wrist = lm[0];
             const isCurled = (tip: number) => {
@@ -528,28 +537,28 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
               return d < 0.22;
             };
             const allCurled = isCurled(8) && isCurled(12) && isCurled(16) && isCurled(20);
-            const isFist = allCurled && !indexUp && !middleUp && !ringUp && !pinkyUp;
+            const isFist = allCurled && indexDown && middleDown && ringDown && pinkyDown;
 
             if (isFist) {
               fistFrames++;
               if (fistFrames >= FIST_CONFIRM_FRAMES) detected = "blackflash";
             } else {
               fistFrames = 0;
-              if (pinch < 0.05 && middleUp) {
+              if (pinch < 0.055 && middleUp && ringDown && pinkyDown) {
                 detected = "purple";
-              } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
+              } else if (thumbUp && indexDown && middleDown && ringDown && pinkyUp) {
                 detected = "mahito";
-              } else if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+              } else if (thumbUp && indexDown && middleDown && ringDown && pinkyDown) {
                 detected = "hakari";
-              } else if (indexUp && !middleUp && !ringUp && pinkyUp) {
+              } else if (indexUp && middleDown && ringDown && pinkyUp) {
                 detected = "megumi";
-              } else if (indexUp && middleUp && ringUp && !pinkyUp) {
+              } else if (indexUp && middleUp && ringUp && pinkyDown) {
                 detected = "dismantle";
-              } else if (!indexUp && middleUp && ringUp && !pinkyUp) {
+              } else if (indexDown && middleUp && ringUp && pinkyDown) {
                 detected = "shrine";
-              } else if (indexUp && middleUp && !ringUp) {
+              } else if (indexUp && middleUp && ringDown && pinkyDown) {
                 detected = "void";
-              } else if (indexUp && !middleUp) {
+              } else if (indexUp && middleDown && ringDown && pinkyDown) {
                 detected = "red";
               }
             }
@@ -558,7 +567,22 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
             drawDebugOverlay(canvasCtx, canvasEl.width, canvasEl.height, results.multiHandLandmarks, detected);
           }
         }
-        updateState(detected);
+
+        if (handList.length === 0) {
+          pendingGesture = "neutral";
+          gestureConfirmFrames = 0;
+          updateState("neutral");
+        } else {
+          if (detected !== pendingGesture) {
+            pendingGesture = detected;
+            gestureConfirmFrames = 0;
+          } else {
+            gestureConfirmFrames++;
+            if (gestureConfirmFrames >= GESTURE_CONFIRM_FRAMES) {
+              updateState(detected);
+            }
+          }
+        }
 
         if (DEBUG_MODE) {
           const handCount = handList.length;
