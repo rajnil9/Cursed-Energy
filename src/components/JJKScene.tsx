@@ -68,10 +68,30 @@ function getShrine(i: number) {
   return { x: 0, y: 0, z: 0, r: 0, g: 0, b: 0, s: 0 };
 }
 
-// ─── Mahito - Self-Embodiment of Perfection (domain expansion scene - rendered separately) ───
-// Placeholder for particle fallback when switching away from mahito
+// ─── Mahito - Self-Embodiment of Perfection ─────────────
+// Organic, morphing body-like shapes - teal/dark blue pulsing mass
 function getMahito(i: number) {
-  return { x: 0, y: 0, z: 0, r: 0.05, g: 0.65, b: 0.55, s: 0 };
+  const t = i / COUNT;
+  if (i < COUNT * 0.25) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 8 + Math.sin(t * 20) * 4 + Math.random() * 3;
+    const stretch = 1 + Math.sin(t * 15) * 0.5;
+    return { x: r * Math.sin(phi) * Math.cos(theta), y: r * Math.sin(phi) * Math.sin(theta) * stretch, z: r * Math.cos(phi), r: 0.05, g: 0.65, b: 0.55, s: 2.0 };
+  }
+  if (i < COUNT * 0.5) {
+    const arm = i % 6;
+    const armAngle = (arm / 6) * Math.PI * 2;
+    const dist = (t - 0.25) * 4 * 35;
+    const wave = Math.sin(dist * 0.3 + arm) * 5;
+    return { x: dist * Math.cos(armAngle) + wave, y: wave * 0.5, z: dist * Math.sin(armAngle) + wave * 0.3, r: 0.05, g: 0.45, b: 0.45, s: 1.2 };
+  }
+  if (i < COUNT * 0.7) {
+    const radius = 20 + Math.random() * 25;
+    const theta = Math.random() * Math.PI * 2;
+    return { x: radius * Math.cos(theta), y: (Math.random() - 0.5) * 30, z: radius * Math.sin(theta), r: 0.15, g: 0.75, b: 0.65, s: 0.5 };
+  }
+  return { x: 0, y: 0, z: 0, r: 0, g: 0, b: 0, s: 0 };
 }
 
 // ─── NEW: Hakari - Idle Death Gamble ─────────────────────────
@@ -225,51 +245,6 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
     );
     scene.add(particles);
 
-    // ─── Mahito Domain Expansion (from mahito.html) ───
-    const mahitoGroup = new THREE.Group();
-    mahitoGroup.visible = false;
-
-    const fleshGeo = new THREE.TorusGeometry(40, 15, 32, 100);
-    const fleshMat = new THREE.MeshStandardMaterial({
-      color: 0x331144,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.2,
-      emissive: 0x110022,
-    });
-    const fleshWall = new THREE.Mesh(fleshGeo, fleshMat);
-    mahitoGroup.add(fleshWall);
-
-    const handGroup = new THREE.Group();
-    for (let i = 0; i < 15; i++) {
-      const hGeo = new THREE.BoxGeometry(2, 5, 1);
-      const hMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.3 });
-      const hand = new THREE.Mesh(hGeo, hMat);
-      hand.position.set((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 40);
-      hand.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
-      handGroup.add(hand);
-    }
-    mahitoGroup.add(handGroup);
-
-    const MAHITO_COUNT = 15000;
-    const mahitoPointsGeo = new THREE.BufferGeometry();
-    const mahitoPos = new Float32Array(MAHITO_COUNT * 3);
-    for (let i = 0; i < MAHITO_COUNT * 3; i++) mahitoPos[i] = (Math.random() - 0.5) * 150;
-    mahitoPointsGeo.setAttribute("position", new THREE.BufferAttribute(mahitoPos, 3));
-    const mahitoCloud = new THREE.Points(
-      mahitoPointsGeo,
-      new THREE.PointsMaterial({
-        size: 0.3,
-        color: 0x8800ff,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-      })
-    );
-    mahitoGroup.add(mahitoCloud);
-
-    scene.add(mahitoGroup);
-    let mahitoTime = 0;
-
     // ─── State ───────────────────────────────────────
     let currentTech = "neutral";
     let shakeIntensity = 0;
@@ -288,7 +263,7 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
         purple: { color: "#bb00ff", name: "Secret Technique: Hollow Purple", bloom: 4.0 },
         void: { color: "#00ffff", name: "Domain Expansion: Infinite Void", bloom: 2.0 },
         red: { color: "#ff3333", name: "Reverse Cursed Technique: Red", bloom: 2.5 },
-        mahito: { color: "#00ccaa", name: "Domain Expansion: Self-Embodiment of Perfection", bloom: 3.0 },
+        mahito: { color: "#00ccaa", name: "Domain Expansion: Self-Embodiment of Perfection", bloom: 2.0 },
         hakari: { color: "#ffaa00", name: "Domain Expansion: Idle Death Gamble", bloom: 3.5 },
         megumi: { color: "#6633aa", name: "Domain Expansion: Chimera Shadow Garden", bloom: 1.5 },
         blackflash: { color: BLACK_FLASH_CONFIG.color, name: BLACK_FLASH_CONFIG.name, bloom: BLACK_FLASH_CONFIG.bloom },
@@ -300,16 +275,6 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
       glowColor = info.color;
       bloomPass.strength = info.bloom;
       onTechniqueChange(info.name, info.color);
-
-      if (tech === "mahito") {
-        particles.visible = false;
-        mahitoGroup.visible = true;
-        mahitoTime = 0;
-      } else {
-        particles.visible = true;
-        mahitoGroup.visible = false;
-        particles.rotation.set(0, 0, 0);
-      }
 
       const getParticle = (i: number) => {
         switch (tech) {
@@ -440,41 +405,19 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
         renderer.domElement.style.transform = "translate(0,0)";
       }
 
-      if (currentTech === "mahito") {
-        mahitoTime += 0.01;
-        const breath = Math.sin(mahitoTime * 0.5) * 0.1;
-        fleshWall.scale.set(1 + breath, 1 + breath, 1 + breath);
-        fleshWall.rotation.y += 0.002;
-        cam.position.x = Math.sin(mahitoTime * 0.7) * 0.5;
-        cam.position.y = Math.cos(mahitoTime * 0.8) * 0.5;
-        const pulse = Math.sin(mahitoTime * 5) * 2;
-        cam.fov = 75 + pulse;
-        cam.updateProjectionMatrix();
-        bloomPass.strength = 3.0 + pulse;
-        fleshMat.opacity = 0.5;
-        mahitoCloud.rotation.y += 0.05;
-        handGroup.children.forEach((h) => {
-          (h as THREE.Mesh).rotation.x += 0.02;
-          h.position.z += Math.sin(mahitoTime * 2) * 0.1;
-        });
-      } else {
-        mahitoTime = 0;
-        cam.position.set(0, 0, 55);
-        cam.fov = 75;
-        cam.updateProjectionMatrix();
-        fleshMat.opacity = 0.2;
-        const pos = particles.geometry.attributes.position.array as Float32Array;
-        const col = particles.geometry.attributes.color.array as Float32Array;
-        const siz = particles.geometry.attributes.size.array as Float32Array;
-        for (let i = 0; i < COUNT * 3; i++) {
-          pos[i] += (targetPositions[i] - pos[i]) * 0.1;
-          col[i] += (targetColors[i] - col[i]) * 0.1;
-        }
-        for (let i = 0; i < COUNT; i++) siz[i] += (targetSizes[i] - siz[i]) * 0.1;
-        particles.geometry.attributes.position.needsUpdate = true;
-        particles.geometry.attributes.color.needsUpdate = true;
-        particles.geometry.attributes.size.needsUpdate = true;
+      const pos = particles.geometry.attributes.position.array as Float32Array;
+      const col = particles.geometry.attributes.color.array as Float32Array;
+      const siz = particles.geometry.attributes.size.array as Float32Array;
+
+      for (let i = 0; i < COUNT * 3; i++) {
+        pos[i] += (targetPositions[i] - pos[i]) * 0.1;
+        col[i] += (targetColors[i] - col[i]) * 0.1;
       }
+      for (let i = 0; i < COUNT; i++) siz[i] += (targetSizes[i] - siz[i]) * 0.1;
+
+      particles.geometry.attributes.position.needsUpdate = true;
+      particles.geometry.attributes.color.needsUpdate = true;
+      particles.geometry.attributes.size.needsUpdate = true;
 
       if (currentTech === "red") {
         particles.rotation.z -= 0.1;
