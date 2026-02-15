@@ -208,6 +208,7 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cameraUtilsRef = useRef<{ stop?: () => void } | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -391,6 +392,7 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
         height: 480,
       });
       cameraUtils.start();
+      cameraUtilsRef.current = cameraUtils;
     };
 
     initHands();
@@ -456,6 +458,27 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
     return () => {
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(animId);
+      if (cameraUtilsRef.current?.stop) {
+        try {
+          cameraUtilsRef.current.stop();
+        } catch (_) {}
+        cameraUtilsRef.current = null;
+      }
+      const video = videoRef.current;
+      if (video?.srcObject && typeof MediaStream !== "undefined") {
+        const stream = video.srcObject as MediaStream;
+        stream.getTracks().forEach((t) => t.stop());
+        video.srcObject = null;
+      }
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
+          obj.geometry?.dispose();
+          const mat = obj.material;
+          if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+          else mat?.dispose();
+        }
+      });
+      composer.dispose();
       renderer.dispose();
       if (containerRef.current?.contains(renderer.domElement)) {
         containerRef.current.removeChild(renderer.domElement);

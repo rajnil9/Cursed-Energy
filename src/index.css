@@ -354,3 +354,63 @@
   0%, 100% { opacity: 0.9; }
   50% { opacity: 1; text-shadow: 0 0 20px rgba(180, 80, 220, 0.8); }
 }
+
+/* ─── Experience page: EXIT DOMAIN button ─────────────────── */
+.experience-exit-btn {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 30;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.75);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(200, 50, 80, 0.4);
+  border-radius: 2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow:
+    0 0 12px rgba(180, 30, 60, 0.2),
+    inset 0 0 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.experience-exit-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  border-color: rgba(220, 60, 90, 0.65);
+  box-shadow:
+    0 0 20px rgba(200, 50, 80, 0.4),
+    0 0 30px rgba(150, 30, 60, 0.2),
+    inset 0 0 12px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+
+.experience-exit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+.experience-exit-btn-icon {
+  font-size: 0.65em;
+  opacity: 0.9;
+}
+
+.experience-exit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.experience-exit-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
