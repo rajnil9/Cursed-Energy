@@ -186,6 +186,7 @@ export function createChimeraShadowTendrils(): THREE.Group {
   (mesh as THREE.Mesh & { _riseAttr?: THREE.InstancedBufferAttribute; _phases?: number[]; _positions?: { x: number; z: number }[] })._phases = phases;
   (mesh as THREE.Mesh & { _riseAttr?: THREE.InstancedBufferAttribute; _phases?: number[]; _positions?: { x: number; z: number }[] })._positions = positions;
 
+  mesh.renderOrder = 0;
   group.add(mesh);
   return group;
 }

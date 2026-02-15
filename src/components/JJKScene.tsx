@@ -576,16 +576,23 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
 
       if (currentTech === "megumi") {
         megumiExpansion = Math.min(1, megumiExpansion + CHIMERA_EXPAND_SPEED);
+        chimeraDomainTime += deltaTime;
         chimeraShadowPlane.scale.set(megumiExpansion, 1, megumiExpansion);
+        chimeraShadowTendrils.scale.set(megumiExpansion, 1, megumiExpansion);
         updateChimeraShadowPlane(chimeraShadowPlane, deltaTime, megumiExpansion, true);
+        updateChimeraShadowTendrils(chimeraShadowTendrils, chimeraDomainTime, megumiExpansion);
       } else {
         if (megumiExpansion > 0) {
           megumiExpansion = Math.max(0, megumiExpansion - CHIMERA_RETRACT_SPEED);
+          chimeraDomainTime += deltaTime;
           chimeraShadowPlane.scale.set(megumiExpansion, 1, megumiExpansion);
+          chimeraShadowTendrils.scale.set(megumiExpansion, 1, megumiExpansion);
           updateChimeraShadowPlane(chimeraShadowPlane, deltaTime, megumiExpansion, false);
+          updateChimeraShadowTendrils(chimeraShadowTendrils, chimeraDomainTime, megumiExpansion);
           if (megumiExpansion < 0.01) {
             megumiExpansion = 0;
             chimeraShadowPlane.visible = false;
+            chimeraShadowTendrils.visible = false;
           }
         }
       }
