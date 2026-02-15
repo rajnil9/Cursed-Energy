@@ -91,86 +91,61 @@
   backdrop-filter: blur(10px);
 }
 
-/* ─── Landing page: Gojo vs Sukuna split, cinematic ───────── */
+/* ─── Landing page: Gojo vs Sukuna artwork bg + animations ── */
 .landing-root {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #0a0508;
+  background: #050308;
 }
 
-/* Split: left = Gojo (blue), right = Sukuna (red/black) */
-.landing-bg-split {
+.landing-bg-wrap {
   position: absolute;
   inset: 0;
-  display: flex;
   z-index: 0;
-}
-
-.landing-side {
-  flex: 1;
-  position: relative;
   overflow: hidden;
 }
 
-.landing-gojo {
-  background: linear-gradient(135deg, rgba(10, 15, 35, 0.98) 0%, rgba(20, 35, 70, 0.6) 50%, rgba(15, 40, 80, 0.3) 100%);
-}
-
-.landing-sukuna {
-  background: linear-gradient(225deg, rgba(25, 5, 5, 0.98) 0%, rgba(50, 10, 10, 0.6) 50%, rgba(40, 5, 5, 0.3) 100%);
-}
-
-/* Subtle energy auras around each side */
-.landing-aura {
+/* Main artwork: cover, subtle zoom animation. Place gojo-sukuna-bg.png in public/ */
+.landing-bg-image {
   position: absolute;
-  top: 50%;
-  width: 80%;
-  height: 120%;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
-  animation: landing-aura-pulse 5s ease-in-out infinite;
-}
-
-.landing-aura-gojo {
-  left: -20%;
-  background: radial-gradient(circle, rgba(80, 140, 255, 0.35) 0%, rgba(40, 80, 180, 0.15) 40%, transparent 70%);
-}
-
-.landing-aura-sukuna {
-  right: -20%;
-  left: auto;
-  background: radial-gradient(circle, rgba(220, 50, 60, 0.3) 0%, rgba(120, 20, 30, 0.2) 40%, rgba(40, 0, 0, 0.1) 70%, transparent 100%);
-}
-
-/* Stylized figure placeholders: semi-transparent silhouettes (optional art can go here) */
-.landing-figure {
-  position: absolute;
-  bottom: 0;
-  width: 55%;
-  height: 85%;
-  max-height: 90vh;
-  opacity: 0.22;
-  background-size: contain;
+  inset: -2%;
+  background-color: #0a0508;
+  background-image: url("/gojo-sukuna-bg.png");
+  background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
-  background-position: bottom center;
+  animation: landing-bg-zoom 20s ease-in-out infinite;
 }
 
-.landing-figure-gojo {
-  left: -5%;
-  background-image: radial-gradient(ellipse 60% 90% at 50% 100%, rgba(100, 160, 255, 0.4) 0%, transparent 60%);
-  box-shadow: inset -80px 0 120px rgba(60, 120, 220, 0.08);
+/* Animated red (Sukuna) glow overlay – left side */
+.landing-bg-glow-red {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(180, 40, 50, 0.18) 0%, transparent 45%);
+  opacity: 0.7;
+  animation: landing-glow-pulse-red 4s ease-in-out infinite;
 }
 
-.landing-figure-sukuna {
-  right: -5%;
-  left: auto;
-  background-image: radial-gradient(ellipse 60% 90% at 50% 100%, rgba(180, 40, 40, 0.35) 0%, rgba(40, 0, 0, 0.2) 50%, transparent 70%);
-  box-shadow: inset 80px 0 120px rgba(120, 20, 20, 0.08);
+/* Animated blue (Gojo) glow overlay – right side */
+.landing-bg-glow-blue {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(270deg, rgba(60, 120, 255, 0.15) 0%, transparent 45%);
+  opacity: 0.7;
+  animation: landing-glow-pulse-blue 4s ease-in-out infinite 0.5s;
+}
+
+/* Subtle shimmer across the divide */
+.landing-bg-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 45%, rgba(255, 255, 255, 0.03) 50%, transparent 55%);
+  background-size: 200% 100%;
+  animation: landing-shimmer 8s ease-in-out infinite;
+  pointer-events: none;
 }
 
 /* Center stays clear for title and buttons */
@@ -179,7 +154,7 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: radial-gradient(ellipse 70% 80% at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
+  background: radial-gradient(ellipse 70% 80% at 50% 50%, transparent 25%, rgba(0, 0, 0, 0.6) 100%);
 }
 
 .landing-content {
@@ -330,9 +305,24 @@
   transform: scale(1.4);
 }
 
-@keyframes landing-aura-pulse {
-  0%, 100% { opacity: 0.45; transform: translateY(-50%) scale(1); }
-  50% { opacity: 0.6; transform: translateY(-50%) scale(1.05); }
+@keyframes landing-bg-zoom {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes landing-glow-pulse-red {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes landing-glow-pulse-blue {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes landing-shimmer {
+  0%, 100% { background-position: 100% 0; }
+  50% { background-position: 0% 0; }
 }
 
 @keyframes landing-title-flicker {

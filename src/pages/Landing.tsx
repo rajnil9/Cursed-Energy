@@ -30,16 +30,12 @@ export default function Landing() {
 
   return (
     <div className="landing-root">
-      {/* Split background: Gojo (left) + Sukuna (right) */}
-      <div className="landing-bg-split">
-        <div className="landing-side landing-gojo">
-          <div className="landing-aura landing-aura-gojo" />
-          <div className="landing-figure landing-figure-gojo" aria-hidden />
-        </div>
-        <div className="landing-side landing-sukuna">
-          <div className="landing-aura landing-aura-sukuna" />
-          <div className="landing-figure landing-figure-sukuna" aria-hidden />
-        </div>
+      {/* Full-screen Gojo vs Sukuna artwork with animated layers */}
+      <div className="landing-bg-wrap">
+        <div className="landing-bg-image" />
+        <div className="landing-bg-glow landing-bg-glow-red" aria-hidden />
+        <div className="landing-bg-glow landing-bg-glow-blue" aria-hidden />
+        <div className="landing-bg-shimmer" aria-hidden />
       </div>
 
       {/* Center vignette so middle stays clear for title/buttons */}
