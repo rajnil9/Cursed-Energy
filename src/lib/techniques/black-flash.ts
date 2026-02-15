@@ -76,7 +76,8 @@ export function getBlackFlash(i: number, count: number) {
 }
 
 export const BLACK_FLASH_CONFIG = {
-  color: "#1a0000",
+  /** UI text/glow color – bright red so "Black Flash" is visible on dark background */
+  color: "#ff3333",
   name: "Black Flash",
   bloom: 4.5,
 };
