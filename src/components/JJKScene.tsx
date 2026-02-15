@@ -262,16 +262,6 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
     let bloodStartTime = 0;
     const FIST_CONFIRM_FRAMES = 3;
 
-    // Global wrist direction (palm normal) — updated when hand(s) detected, used by all techniques
-    const wristDirectionTarget = { x: 0, y: 0, z: 1 };
-    const wristDirVec = new THREE.Vector3(0, 0, 1);
-    const wristDirSmoothVec = new THREE.Vector3(0, 0, 1);
-    const wristForward = new THREE.Vector3(0, 0, -1);
-    const wristQuat = new THREE.Quaternion();
-    const techniqueEuler = new THREE.Euler(0, 0, 0);
-    const techniqueQuat = new THREE.Quaternion();
-    const WRIST_DIR_LERP = 0.11;
-
     // Blood: palm origin and direction (Three.js space), updated from hand landmarks
     const BLOOD_SCALE = 50;
     const bloodOrigin = { x: 0, y: 0, z: 0 };
@@ -515,17 +505,6 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
 
         const handList = results.multiHandLandmarks ?? [];
 
-        if (handList.length >= 1) {
-          const pn = palmNormalFromLandmarks(handList[0]);
-          wristDirectionTarget.x = pn.x;
-          wristDirectionTarget.y = -pn.y;
-          wristDirectionTarget.z = -pn.z;
-          const len = Math.sqrt(wristDirectionTarget.x ** 2 + wristDirectionTarget.y ** 2 + wristDirectionTarget.z ** 2) || 1;
-          wristDirectionTarget.x /= len;
-          wristDirectionTarget.y /= len;
-          wristDirectionTarget.z /= len;
-        }
-
         if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {
             if (!DEBUG_MODE) {
@@ -665,36 +644,28 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       particles.geometry.attributes.color.needsUpdate = true;
       particles.geometry.attributes.size.needsUpdate = true;
 
-      if (currentTech === "neutral") {
-        particles.quaternion.identity();
-        particles.rotation.y += 0.005;
+      if (currentTech === "red") {
+        particles.rotation.z -= 0.1;
+      } else if (currentTech === "purple") {
+        particles.rotation.z += 0.2;
+        particles.rotation.y += 0.05;
+      } else if (currentTech === "shrine" || currentTech === "megumi") {
+        particles.rotation.set(0, 0, 0);
+      } else if (currentTech === "mahito") {
+        particles.rotation.y += 0.01;
+        particles.rotation.x += 0.005;
+      } else if (currentTech === "hakari") {
+        particles.rotation.y += 0.08;
+      } else if (currentTech === "blackflash") {
+        particles.rotation.z += 0.15;
+        particles.rotation.y += 0.1;
+      } else if (currentTech === "dismantle") {
+        particles.rotation.y += 0.003;
+        particles.rotation.z += 0.002;
       } else if (currentTech === "blood") {
-        particles.quaternion.identity();
         particles.rotation.set(0, 0, 0);
       } else {
-        wristDirVec.set(wristDirectionTarget.x, wristDirectionTarget.y, wristDirectionTarget.z);
-        wristDirSmoothVec.lerp(wristDirVec, WRIST_DIR_LERP);
-        wristQuat.setFromUnitVectors(wristForward, wristDirSmoothVec);
-        techniqueEuler.set(0, 0, 0);
-        if (currentTech === "red") {
-          techniqueEuler.z -= 0.1;
-        } else if (currentTech === "purple") {
-          techniqueEuler.z += 0.2;
-          techniqueEuler.y += 0.05;
-        } else if (currentTech === "mahito") {
-          techniqueEuler.y += 0.01;
-          techniqueEuler.x += 0.005;
-        } else if (currentTech === "hakari") {
-          techniqueEuler.y += 0.08;
-        } else if (currentTech === "blackflash") {
-          techniqueEuler.z += 0.15;
-          techniqueEuler.y += 0.1;
-        } else if (currentTech === "dismantle") {
-          techniqueEuler.y += 0.003;
-          techniqueEuler.z += 0.002;
-        }
-        techniqueQuat.setFromEuler(techniqueEuler);
-        particles.quaternion.copy(wristQuat).multiply(techniqueQuat);
+        particles.rotation.y += 0.005;
       }
 
       composer.render();
