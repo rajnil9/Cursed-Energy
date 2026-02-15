@@ -5,17 +5,6 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { getBlackFlash, BLACK_FLASH_CONFIG } from "@/lib/techniques/black-flash";
 import { getDismantle, DISMANTLE_CONFIG } from "@/lib/techniques/dismantle";
-import {
-  isFist,
-  isDismantleGesture,
-  isShrineGesture,
-  isVoidGesture,
-  isRedGesture,
-  isMegumiGesture,
-  isHakariGesture,
-  isMahitoGesture,
-  isPinchGesture,
-} from "@/lib/techniques/gesture-detection";
 
 declare global {
   interface Window {
@@ -264,9 +253,8 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
     let shakeIntensity = 0;
     let glowColor = "#00ffff";
     let animId: number;
-    let confirmFrames = 0;
-    let pendingGesture = "neutral";
-    const CONFIRM_FRAMES = 2; // Require 2 consecutive frames (faster response, still stable)
+    let fistFrames = 0;
+    const FIST_CONFIRM_FRAMES = 3;
 
     function updateState(tech: string) {
       if (currentTech === tech) return;
@@ -340,55 +328,60 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
       const hands = new window.Hands({
         locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
       });
-      hands.setOptions({
-        maxNumHands: 2,
-        modelComplexity: 2,           // Higher = better landmark accuracy
-        minDetectionConfidence: 0.6,  // Slightly lower = catch hands in more lighting
-        minTrackingConfidence: 0.5,   // Smooth tracking once hand is found
-      });
+      hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.7 });
 
       hands.onResults((results: any) => {
         canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-        let rawDetected = "neutral";
+        let detected = "neutral";
 
         if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {
             window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
             window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
 
-            // Stricter gesture checks - order matters (most specific first)
-            if (isFist(lm)) {
-              rawDetected = "blackflash";
-            } else if (isPinchGesture(lm)) {
-              rawDetected = "purple";
-            } else if (isMahitoGesture(lm)) {
-              rawDetected = "mahito";
-            } else if (isMegumiGesture(lm)) {
-              rawDetected = "megumi";
-            } else if (isHakariGesture(lm)) {
-              rawDetected = "hakari";
-            } else if (isDismantleGesture(lm)) {
-              rawDetected = "dismantle";
-            } else if (isShrineGesture(lm)) {
-              rawDetected = "shrine";
-            } else if (isVoidGesture(lm)) {
-              rawDetected = "void";
-            } else if (isRedGesture(lm)) {
-              rawDetected = "red";
+            const isUp = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
+            const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
+
+            const indexUp = isUp(8, 6);
+            const middleUp = isUp(12, 10);
+            const ringUp = isUp(16, 14);
+            const pinkyUp = isUp(20, 18);
+            const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
+
+            const wrist = lm[0];
+            const isCurled = (tip: number) => {
+              const d = Math.hypot(lm[tip].x - wrist.x, lm[tip].y - wrist.y);
+              return d < 0.22;
+            };
+            const allCurled = isCurled(8) && isCurled(12) && isCurled(16) && isCurled(20);
+            const isFist = allCurled && !indexUp && !middleUp && !ringUp && !pinkyUp;
+
+            if (isFist) {
+              fistFrames++;
+              if (fistFrames >= FIST_CONFIRM_FRAMES) detected = "blackflash";
+            } else {
+              fistFrames = 0;
+              if (pinch < 0.05) {
+                detected = "purple";
+              } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
+                detected = "mahito";
+              } else if (indexUp && !middleUp && !ringUp && pinkyUp) {
+                detected = "megumi";
+              } else if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                detected = "hakari";
+              } else if (indexUp && middleUp && ringUp && !pinkyUp) {
+                detected = "dismantle";
+              } else if (indexUp && middleUp && ringUp && pinkyUp) {
+                detected = "shrine";
+              } else if (indexUp && middleUp && !ringUp) {
+                detected = "void";
+              } else if (indexUp && !middleUp) {
+                detected = "red";
+              }
             }
           });
         }
-
-        // Confirmation: only switch after CONFIRM_FRAMES consecutive same gesture (reduces flicker)
-        if (rawDetected === pendingGesture) {
-          confirmFrames++;
-          if (confirmFrames >= CONFIRM_FRAMES) {
-            updateState(rawDetected);
-          }
-        } else {
-          pendingGesture = rawDetected;
-          confirmFrames = 1;
-        }
+        updateState(detected);
       });
 
       const cameraUtils = new window.Camera(videoEl, {
@@ -397,8 +390,8 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
           canvasEl.height = videoEl.videoHeight;
           await hands.send({ image: videoEl });
         },
-        width: 1280,
-        height: 720,
+        width: 640,
+        height: 480,
       });
       cameraUtils.start();
     };
@@ -478,9 +471,9 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
       {/* Three.js canvas container */}
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
-      {/* Camera feed - 720p for better hand tracking and display quality */}
+      {/* Camera feed */}
       <div className="absolute bottom-[2%] left-[18%] -translate-x-1/2 w-[85vw] max-w-[450px] h-[42vh] border border-border z-20 rounded-[25px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)]" style={{ transform: "translateX(-50%) scaleX(-1)" }}>
-        <video ref={videoRef} className="w-full h-full object-cover opacity-90" playsInline muted />
+        <video ref={videoRef} className="w-full h-full object-cover opacity-80" playsInline muted />
         <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       </div>
     </>
