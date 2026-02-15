@@ -205,13 +205,18 @@ export type HandScreenPoint = { x: number; y: number };
 interface Props {
   onTechniqueChange: (name: string, color: string) => void;
   onHandScreenPositions?: (points: HandScreenPoint[]) => void;
+  /** Use a specific camera (e.g. DroidCam / phone-as-webcam). Pass deviceId from enumerateDevices. */
+  cameraDeviceId?: string | null;
+  /** Use phone camera via IP Webcam app: e.g. http://192.168.1.5:8080/video */
+  cameraStreamUrl?: string | null;
 }
 
-const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
+const JJKScene = ({ onTechniqueChange, onHandScreenPositions, cameraDeviceId, cameraStreamUrl }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraUtilsRef = useRef<{ stop?: () => void } | null>(null);
+  const frameLoopIdRef = useRef<number | null>(null);
   const onHandScreenPositionsRef = useRef(onHandScreenPositions);
   onHandScreenPositionsRef.current = onHandScreenPositions;
 
@@ -400,17 +405,48 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         updateState(detected);
       });
 
-      const cameraUtils = new window.Camera(videoEl, {
-        onFrame: async () => {
+      const runCustomFrameLoop = () => {
+        if (videoEl.readyState >= 2) {
           canvasEl.width = videoEl.videoWidth;
           canvasEl.height = videoEl.videoHeight;
-          await hands.send({ image: videoEl });
-        },
-        width: 640,
-        height: 480,
-      });
-      cameraUtils.start();
-      cameraUtilsRef.current = cameraUtils;
+          hands.send({ image: videoEl });
+        }
+        frameLoopIdRef.current = requestAnimationFrame(runCustomFrameLoop);
+      };
+
+      if (cameraStreamUrl) {
+        videoEl.src = cameraStreamUrl;
+        videoEl.crossOrigin = "anonymous";
+        videoEl.play().catch(() => {});
+        frameLoopIdRef.current = requestAnimationFrame(runCustomFrameLoop);
+      } else if (cameraDeviceId) {
+        navigator.mediaDevices
+          .getUserMedia({
+            video: {
+              deviceId: { exact: cameraDeviceId },
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+            },
+          })
+          .then((stream) => {
+            videoEl.srcObject = stream;
+            videoEl.play().catch(() => {});
+            frameLoopIdRef.current = requestAnimationFrame(runCustomFrameLoop);
+          })
+          .catch((err) => console.error("Camera access failed:", err));
+      } else {
+        const cameraUtils = new window.Camera(videoEl, {
+          onFrame: async () => {
+            canvasEl.width = videoEl.videoWidth;
+            canvasEl.height = videoEl.videoHeight;
+            await hands.send({ image: videoEl });
+          },
+          width: 640,
+          height: 480,
+        });
+        cameraUtils.start();
+        cameraUtilsRef.current = cameraUtils;
+      }
     };
 
     initHands();
@@ -476,6 +512,10 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
     return () => {
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(animId);
+      if (frameLoopIdRef.current != null) {
+        cancelAnimationFrame(frameLoopIdRef.current);
+        frameLoopIdRef.current = null;
+      }
       if (cameraUtilsRef.current?.stop) {
         try {
           cameraUtilsRef.current.stop();
@@ -483,10 +523,16 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         cameraUtilsRef.current = null;
       }
       const video = videoRef.current;
-      if (video?.srcObject && typeof MediaStream !== "undefined") {
-        const stream = video.srcObject as MediaStream;
-        stream.getTracks().forEach((t) => t.stop());
-        video.srcObject = null;
+      if (video) {
+        if (video.srcObject && typeof MediaStream !== "undefined") {
+          const stream = video.srcObject as MediaStream;
+          stream.getTracks().forEach((t) => t.stop());
+          video.srcObject = null;
+        }
+        if (video.src) {
+          video.src = "";
+          video.load();
+        }
       }
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
@@ -502,7 +548,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         containerRef.current.removeChild(renderer.domElement);
       }
     };
-  }, []);
+  }, [cameraDeviceId, cameraStreamUrl]);
 
   return (
     <>

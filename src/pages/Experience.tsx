@@ -4,6 +4,8 @@ import JJKScene from "@/components/JJKScene";
 import GestureGuide from "@/components/GestureGuide";
 import type { HandScreenPoint } from "@/components/JJKScene";
 
+type VideoDevice = { deviceId: string; label: string };
+
 const Experience = () => {
   const navigate = useNavigate();
   const [techniqueName, setTechniqueName] = useState("CURSED ENERGY");
@@ -13,6 +15,11 @@ const Experience = () => {
   const [exitHandHover, setExitHandHover] = useState(false);
   const [menuMouseHover, setMenuMouseHover] = useState(false);
   const [menuHandHover, setMenuHandHover] = useState(false);
+  const [videoDevices, setVideoDevices] = useState<VideoDevice[]>([]);
+  const [cameraDeviceId, setCameraDeviceId] = useState<string | null>(null);
+  const [cameraStreamUrl, setCameraStreamUrl] = useState<string | null>(null);
+  const [streamUrlInput, setStreamUrlInput] = useState("");
+  const [cameraPanelOpen, setCameraPanelOpen] = useState(false);
   const exitBtnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastExitHand = useRef(false);
@@ -58,6 +65,24 @@ const Experience = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const list = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach((t) => t.stop());
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setVideoDevices(
+          devices
+            .filter((d) => d.kind === "videoinput")
+            .map((d) => ({ deviceId: d.deviceId, label: d.label || `Camera ${d.deviceId.slice(0, 8)}` }))
+        );
+      } catch {
+        setVideoDevices([]);
+      }
+    };
+    list();
+  }, []);
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-background">
       <div className="grain-overlay" />
@@ -98,6 +123,72 @@ const Experience = () => {
         <GestureGuide />
       </div>
 
+      {/* Camera source — phone as webcam (bottom-left) */}
+      <div className="absolute bottom-[2%] left-4 z-20 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => setCameraPanelOpen((o) => !o)}
+          className="experience-exit-btn text-xs py-1 px-2"
+          aria-expanded={cameraPanelOpen}
+        >
+          {cameraPanelOpen ? "▼ Camera" : "▶ Camera (phone as webcam)"}
+        </button>
+        {cameraPanelOpen && (
+          <div className="experience-gesture-menu w-72 p-3 space-y-3">
+            <label className="block text-[10px] uppercase tracking-wider text-muted-foreground">
+              Camera device
+            </label>
+            <p className="text-[9px] text-muted-foreground mb-1">
+              Install DroidCam (Android) or EpocCam (iPhone) to use your phone as a webcam; it will appear here.
+            </p>
+            <select
+              value={cameraDeviceId ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setCameraDeviceId(v || null);
+                if (v) setCameraStreamUrl(null);
+              }}
+              className="w-full bg-background/80 border border-border rounded px-2 py-1.5 text-sm text-foreground"
+            >
+              <option value="">Default (built-in)</option>
+              {videoDevices.map((d) => (
+                <option key={d.deviceId} value={d.deviceId}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+            <div className="border-t border-border pt-2">
+              <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                Or IP Webcam URL (phone app)
+              </label>
+              <div className="flex gap-1">
+                <input
+                  type="url"
+                  placeholder="http://192.168.1.x:8080/video"
+                  value={streamUrlInput}
+                  onChange={(e) => setStreamUrlInput(e.target.value)}
+                  className="flex-1 min-w-0 bg-background/80 border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = streamUrlInput.trim() || null;
+                    setCameraStreamUrl(url);
+                    if (url) setCameraDeviceId(null);
+                  }}
+                  className="experience-exit-btn text-xs py-1 px-2 shrink-0"
+                >
+                  Use
+                </button>
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-1">
+                Use IP Webcam (Android) or similar; enter the video URL and tap Use. Scene will reload.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Three.js + Camera Scene */}
       <JJKScene
         onTechniqueChange={(name, color) => {
@@ -105,6 +196,8 @@ const Experience = () => {
           setGlowColor(color);
         }}
         onHandScreenPositions={handleHandScreenPositions}
+        cameraDeviceId={cameraDeviceId}
+        cameraStreamUrl={cameraStreamUrl}
       />
 
       {/* Fade-out overlay when exiting */}
