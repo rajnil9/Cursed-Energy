@@ -1,13 +1,22 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import JJKScene from "@/components/JJKScene";
 import GestureGuide from "@/components/GestureGuide";
+import type { HandScreenPoint } from "@/components/JJKScene";
 
 const Experience = () => {
   const navigate = useNavigate();
   const [techniqueName, setTechniqueName] = useState("CURSED ENERGY");
   const [glowColor, setGlowColor] = useState("#00ffff");
   const [exiting, setExiting] = useState(false);
+  const [exitMouseHover, setExitMouseHover] = useState(false);
+  const [exitHandHover, setExitHandHover] = useState(false);
+  const [menuMouseHover, setMenuMouseHover] = useState(false);
+  const [menuHandHover, setMenuHandHover] = useState(false);
+  const exitBtnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const lastExitHand = useRef(false);
+  const lastMenuHand = useRef(false);
 
   const handleExitDomain = useCallback(() => {
     if (exiting) return;
@@ -17,20 +26,55 @@ const Experience = () => {
     }, 700);
   }, [exiting, navigate]);
 
+  const handleHandScreenPositions = useCallback((points: HandScreenPoint[]) => {
+    const exitEl = exitBtnRef.current;
+    const menuEl = menuRef.current;
+    let exitHit = false;
+    let menuHit = false;
+    for (const p of points) {
+      if (exitEl) {
+        const r = exitEl.getBoundingClientRect();
+        if (p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom) exitHit = true;
+      }
+      if (menuEl) {
+        const r = menuEl.getBoundingClientRect();
+        if (p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom) menuHit = true;
+      }
+    }
+    if (exitHit !== lastExitHand.current) {
+      lastExitHand.current = exitHit;
+      setExitHandHover(exitHit);
+    }
+    if (menuHit !== lastMenuHand.current) {
+      lastMenuHand.current = menuHit;
+      setMenuHandHover(menuHit);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      lastExitHand.current = false;
+      lastMenuHand.current = false;
+    };
+  }, []);
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-background">
       <div className="grain-overlay" />
 
-      {/* EXIT — top-right, returns to home and stops camera/gestures */}
+      {/* EXIT DOMAIN — top-right, mouse + hand hover glow */}
       <button
+        ref={exitBtnRef}
         type="button"
-        className="experience-exit-btn"
+        className={`experience-exit-btn ${exitMouseHover ? "mouse-hover" : ""} ${exitHandHover ? "hand-hover" : ""}`}
         onClick={handleExitDomain}
         disabled={exiting}
-        aria-label="Exit and return to home"
+        onMouseEnter={() => setExitMouseHover(true)}
+        onMouseLeave={() => setExitMouseHover(false)}
+        aria-label="Exit domain and return to home"
       >
         <span className="experience-exit-btn-icon" aria-hidden>✖</span>
-        EXIT
+        EXIT DOMAIN
       </button>
 
       {/* UI Overlay */}
@@ -44,8 +88,15 @@ const Experience = () => {
         </div>
       </div>
 
-      {/* Gesture Guide */}
-      <GestureGuide />
+      {/* Gesture Menu — side panel, mouse + hand hover glow */}
+      <div
+        ref={menuRef}
+        className={`experience-gesture-menu ${menuMouseHover ? "mouse-hover" : ""} ${menuHandHover ? "hand-hover" : ""}`}
+        onMouseEnter={() => setMenuMouseHover(true)}
+        onMouseLeave={() => setMenuMouseHover(false)}
+      >
+        <GestureGuide />
+      </div>
 
       {/* Three.js + Camera Scene */}
       <JJKScene
@@ -53,6 +104,7 @@ const Experience = () => {
           setTechniqueName(name);
           setGlowColor(color);
         }}
+        onHandScreenPositions={handleHandScreenPositions}
       />
 
       {/* Fade-out overlay when exiting */}

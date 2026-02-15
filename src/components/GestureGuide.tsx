@@ -12,7 +12,7 @@ const gestures = [
 
 const GestureGuide = () => {
   return (
-    <div className="absolute bottom-4 right-4 z-30 w-56 gesture-guide-card rounded-xl p-3 space-y-1.5">
+    <div className="gesture-guide-card gesture-guide-inner rounded-xl p-3 space-y-1.5">
       <h3 className="text-foreground font-bold text-[10px] tracking-[3px] uppercase mb-2 text-center opacity-70">
         Hand Gestures
       </h3>

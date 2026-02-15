@@ -200,15 +200,20 @@ function getMegumi(i: number) {
   return { x: 0, y: 0, z: 0, r: 0, g: 0, b: 0, s: 0 };
 }
 
+export type HandScreenPoint = { x: number; y: number };
+
 interface Props {
   onTechniqueChange: (name: string, color: string) => void;
+  onHandScreenPositions?: (points: HandScreenPoint[]) => void;
 }
 
-const JJKScene = ({ onTechniqueChange }: Props) => {
+const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraUtilsRef = useRef<{ stop?: () => void } | null>(null);
+  const onHandScreenPositionsRef = useRef(onHandScreenPositions);
+  onHandScreenPositionsRef.current = onHandScreenPositions;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -331,6 +336,19 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
       hands.onResults((results: any) => {
         canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
         let detected = "neutral";
+
+        const screenPoints: HandScreenPoint[] = [];
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        if (results.multiHandLandmarks) {
+          results.multiHandLandmarks.forEach((lm: any) => {
+            if (lm[8]) {
+              screenPoints.push({ x: lm[8].x * w, y: lm[8].y * h });
+            }
+          });
+        }
+        onHandScreenPositionsRef.current?.(screenPoints);
 
         if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {

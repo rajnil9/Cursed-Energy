@@ -291,6 +291,7 @@
 
 
 /* ─── Experience page: EXIT DOMAIN button ─────────────────── */
+/* ─── EXIT DOMAIN button: mouse + hand hover glow ──────────────────── */
 .experience-exit-btn {
   position: fixed;
   top: 1.25rem;
@@ -301,35 +302,44 @@
   font-weight: 600;
   letter-spacing: 0.2em;
   padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.75);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(200, 50, 80, 0.4);
-  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(200, 50, 80, 0.45);
+  border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  box-shadow:
-    0 0 12px rgba(180, 30, 60, 0.2),
-    inset 0 0 12px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 0 14px rgba(180, 40, 60, 0.18);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-.experience-exit-btn:hover:not(:disabled) {
+.experience-exit-btn:hover:not(:disabled),
+.experience-exit-btn.mouse-hover:not(:disabled) {
   transform: scale(1.05);
-  border-color: rgba(220, 60, 90, 0.65);
+  border-color: rgba(230, 70, 95, 0.75);
   box-shadow:
-    0 0 20px rgba(200, 50, 80, 0.4),
-    0 0 30px rgba(150, 30, 60, 0.2),
-    0 2px 0 0 rgba(200, 50, 80, 0.5);
-  color: #fff;
+    0 0 22px rgba(200, 50, 80, 0.45),
+    0 0 36px rgba(160, 30, 50, 0.25);
+}
+
+.experience-exit-btn.hand-hover:not(:disabled) {
+  border-color: rgba(240, 60, 90, 0.85);
+  box-shadow:
+    0 0 20px rgba(220, 50, 80, 0.5),
+    inset 0 0 16px rgba(180, 30, 50, 0.12);
+  animation: experience-exit-pulse 1.8s ease-in-out infinite;
+}
+
+.experience-exit-btn.hand-hover.mouse-hover:not(:disabled),
+.experience-exit-btn.hand-hover:hover:not(:disabled) {
+  box-shadow:
+    0 0 24px rgba(220, 50, 80, 0.55),
+    inset 0 0 18px rgba(180, 30, 50, 0.14);
 }
 
 .experience-exit-btn:active:not(:disabled) {
   transform: scale(0.98);
-  box-shadow:
-    0 0 12px rgba(200, 50, 80, 0.3),
-    0 1px 0 0 rgba(200, 50, 80, 0.6);
 }
 
 .experience-exit-btn:disabled {
@@ -340,6 +350,56 @@
 .experience-exit-btn-icon {
   font-size: 0.65em;
   opacity: 0.9;
+}
+
+@keyframes experience-exit-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(220, 50, 80, 0.5), inset 0 0 16px rgba(180, 30, 50, 0.1); }
+  50% { box-shadow: 0 0 26px rgba(230, 60, 90, 0.55), inset 0 0 20px rgba(200, 40, 60, 0.15); }
+}
+
+/* ─── Gesture Menu panel: mouse + hand hover glow ──────────────────── */
+.experience-gesture-menu {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 30;
+  width: 14rem;
+  max-width: calc(100vw - 2rem);
+  border-radius: 12px;
+  border: 1px solid rgba(100, 120, 220, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 16px rgba(80, 100, 200, 0.15);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.experience-gesture-menu .gesture-guide-inner {
+  position: static;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.experience-gesture-menu:hover,
+.experience-gesture-menu.mouse-hover {
+  border-color: rgba(120, 140, 255, 0.55);
+  box-shadow: 0 0 24px rgba(90, 120, 240, 0.25);
+  filter: brightness(1.08);
+}
+
+.experience-gesture-menu.hand-hover {
+  border-color: rgba(140, 160, 255, 0.6);
+  box-shadow: 0 0 22px rgba(100, 130, 255, 0.3);
+  animation: experience-menu-pulse 2s ease-in-out infinite;
+}
+
+.experience-gesture-menu.hand-hover.mouse-hover,
+.experience-gesture-menu.hand-hover:hover {
+  box-shadow: 0 0 28px rgba(110, 140, 255, 0.35);
+}
+
+@keyframes experience-menu-pulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(100, 130, 255, 0.28); }
+  50% { box-shadow: 0 0 28px rgba(120, 150, 255, 0.38); }
 }
 
 .experience-exit-overlay {
