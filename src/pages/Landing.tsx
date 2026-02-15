@@ -30,18 +30,13 @@ export default function Landing() {
 
   return (
     <div className="landing-root">
-      {/* Full-screen Gojo vs Sukuna artwork with animated layers */}
-      <div className="landing-bg-wrap">
-        <div className="landing-bg-image" />
-        <div className="landing-bg-glow landing-bg-glow-red" aria-hidden />
-        <div className="landing-bg-glow landing-bg-glow-blue" aria-hidden />
-        <div className="landing-bg-shimmer" aria-hidden />
-      </div>
+      {/* Full-screen background image – only the artwork */}
+      <div className="landing-bg-image" />
 
-      {/* Center vignette so middle stays clear for title/buttons */}
+      {/* Very light center darkening so title/buttons stay readable */}
       <div className="landing-vignette" />
 
-      {/* Content */}
+      {/* Content: only title, subtitle, PLAY, EXIT in front of the image */}
       <div className={`landing-content ${loaded ? "loaded" : ""}`}>
         <h1 className="landing-title">「呪術廻戦」</h1>
         <p className="landing-subtitle">Cursed Energy Experience</p>

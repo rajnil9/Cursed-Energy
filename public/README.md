@@ -1,7 +1,10 @@
-# Public assets
+# Public folder – landing background
 
-Place the Gojo vs Sukuna landing background image here as:
+To show the Gojo vs Sukuna image on the front page:
 
-**`gojo-sukuna-bg.png`**
+1. Copy your image file into this `public` folder.
+2. Rename it exactly to: **`gojo-sukuna-bg.png`**
 
-It will be used as the full-screen background on the home page. If the file is missing, the page still shows a dark fallback.
+The app will use it as the full-screen background. Only the title (呪術廻戦), subtitle (Cursed Energy Experience), and PLAY / EXIT buttons appear in front of the image.
+
+If the file is not here, the front page shows a dark background until you add it.
