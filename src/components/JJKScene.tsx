@@ -515,7 +515,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
       {/* Camera feed — 720p for better finger detection and clearer preview */}
-      <div className="absolute bottom-[2%] left-[18%] -translate-x-1/2 w-[90vw] max-w-[520px] h-[48vh] border border-border z-20 rounded-[25px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)] camera-feed-container" style={{ transform: "translateX(-50%) scaleX(-1)" }}>
+      <div className="absolute bottom-[2%] left-[18%] -translate-x-1/2 w-[75vw] max-w-[360px] h-[32vh] border border-border z-20 rounded-[25px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)] camera-feed-container" style={{ transform: "translateX(-50%) scaleX(-1)" }}>
         <video ref={videoRef} className="w-full h-full object-cover opacity-90 camera-feed-video" playsInline muted />
         <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
       </div>
