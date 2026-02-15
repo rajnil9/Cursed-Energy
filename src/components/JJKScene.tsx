@@ -3,6 +3,9 @@ import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { getBlackFlash, BLACK_FLASH_CONFIG } from "@/lib/techniques/black-flash";
+import { getDismantle, DISMANTLE_CONFIG } from "@/lib/techniques/dismantle";
+import { isFist, isDismantleGesture } from "@/lib/techniques/gesture-detection";
 
 declare global {
   interface Window {
@@ -251,6 +254,8 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
     let shakeIntensity = 0;
     let glowColor = "#00ffff";
     let animId: number;
+    let fistFrames = 0;
+    const FIST_CONFIRM_FRAMES = 3;
 
     function updateState(tech: string) {
       if (currentTech === tech) return;
@@ -265,6 +270,8 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
         mahito: { color: "#00ccaa", name: "Domain Expansion: Self-Embodiment of Perfection", bloom: 2.0 },
         hakari: { color: "#ffaa00", name: "Domain Expansion: Idle Death Gamble", bloom: 3.5 },
         megumi: { color: "#6633aa", name: "Domain Expansion: Chimera Shadow Garden", bloom: 1.5 },
+        blackflash: { color: BLACK_FLASH_CONFIG.color, name: BLACK_FLASH_CONFIG.name, bloom: BLACK_FLASH_CONFIG.bloom },
+        dismantle: { color: DISMANTLE_CONFIG.color, name: DISMANTLE_CONFIG.name, bloom: DISMANTLE_CONFIG.bloom },
         neutral: { color: "#00ffff", name: "Neutral State", bloom: 1.0 },
       };
 
@@ -282,6 +289,8 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
           case "mahito": return getMahito(i);
           case "hakari": return getHakari(i);
           case "megumi": return getMegumi(i);
+          case "blackflash": return getBlackFlash(i, COUNT);
+          case "dismantle": return getDismantle(i, COUNT);
           default:
             if (i < COUNT * 0.05) {
               const r = 15 + Math.random() * 20;
@@ -341,20 +350,30 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
             const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
 
             // Gesture detection (order matters - most specific first)
-            if (pinch < 0.04) {
-              detected = "purple"; // Pinch → Hollow Purple
-            } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
-              detected = "mahito"; // 🤙 Thumb + Pinky → Self-Embodiment of Perfection
-            } else if (indexUp && !middleUp && !ringUp && pinkyUp) {
-              detected = "megumi"; // 🤘 Horns → Chimera Shadow Garden
-            } else if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
-              detected = "hakari"; // 👍 Thumb only → Idle Death Gamble
-            } else if (indexUp && middleUp && ringUp && pinkyUp) {
-              detected = "shrine"; // 🖐️ All fingers → Malevolent Shrine
-            } else if (indexUp && middleUp && !ringUp) {
-              detected = "void"; // ✌️ Peace → Infinite Void
-            } else if (indexUp && !middleUp) {
-              detected = "red"; // ☝️ Index only → Red
+            if (isFist(lm)) {
+              fistFrames++;
+              if (fistFrames >= FIST_CONFIRM_FRAMES) {
+                detected = "blackflash"; // ✊ Fist → Black Flash
+              }
+            } else {
+              fistFrames = 0;
+              if (pinch < 0.04) {
+                detected = "purple"; // Pinch → Hollow Purple
+              } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
+                detected = "mahito"; // 🤙 Thumb + Pinky → Self-Embodiment of Perfection
+              } else if (indexUp && !middleUp && !ringUp && pinkyUp) {
+                detected = "megumi"; // 🤘 Horns → Chimera Shadow Garden
+              } else if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                detected = "hakari"; // 👍 Thumb only → Idle Death Gamble
+              } else if (indexUp && middleUp && ringUp && !pinkyUp) {
+                detected = "dismantle"; // 🤟 3 fingers (knife hand) → Dismantle
+              } else if (indexUp && middleUp && ringUp && pinkyUp) {
+                detected = "shrine"; // 🖐️ All fingers → Malevolent Shrine
+              } else if (indexUp && middleUp && !ringUp) {
+                detected = "void"; // ✌️ Peace → Infinite Void
+              } else if (indexUp && !middleUp) {
+                detected = "red"; // ☝️ Index only → Red
+              }
             }
           });
         }
@@ -411,6 +430,12 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
         particles.rotation.x += 0.005;
       } else if (currentTech === "hakari") {
         particles.rotation.y += 0.08;
+      } else if (currentTech === "blackflash") {
+        particles.rotation.z += 0.15;
+        particles.rotation.y += 0.1;
+      } else if (currentTech === "dismantle") {
+        particles.rotation.y += 0.003;
+        particles.rotation.z += 0.002;
       } else {
         particles.rotation.y += 0.005;
       }
