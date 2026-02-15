@@ -528,3 +528,34 @@
   opacity: 1;
   pointer-events: auto;
 }
+
+/* Debug overlay (hand detection) */
+.debug-panel {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+.debug-panel-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.debug-panel-row span:first-child {
+  color: rgba(255, 255, 255, 0.85);
+}
+.debug-panel .debug-valid {
+  color: #6ee76e;
+}
+.debug-panel .debug-invalid {
+  color: #f66;
+}
+.camera-feed-container.debug-border-none {
+  box-shadow: 0 0 0 3px #f44, 0 0 40px rgba(0, 0, 0, 0.9);
+}
+.camera-feed-container.debug-border-invalid {
+  box-shadow: 0 0 0 3px #dd0, 0 0 40px rgba(0, 0, 0, 0.9);
+}
+.camera-feed-container.debug-border-valid {
+  box-shadow: 0 0 0 3px #4a4, 0 0 16px rgba(74, 255, 74, 0.35), 0 0 40px rgba(0, 0, 0, 0.9);
+}

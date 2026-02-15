@@ -20,6 +20,8 @@ declare global {
 
 const COUNT = 20000;
 
+const DEBUG_MODE = true;
+
 // ─── Particle Shape Functions ────────────────────────────────
 function getRed(i: number) {
   if (i < COUNT * 0.1) {
@@ -154,6 +156,9 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
   const cameraUtilsRef = useRef<{ stop?: () => void } | null>(null);
   const onHandScreenPositionsRef = useRef(onHandScreenPositions);
   onHandScreenPositionsRef.current = onHandScreenPositions;
+  const debugPanelRef = useRef<HTMLDivElement>(null);
+  const cameraContainerRef = useRef<HTMLDivElement>(null);
+  const currentTechNameRef = useRef("Neutral State");
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -307,6 +312,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       const info = map[tech] || map.neutral;
       glowColor = info.color;
       bloomPass.strength = info.bloom;
+      currentTechNameRef.current = info.name;
       onTechniqueChange(info.name, info.color);
 
       const getParticle = (i: number) => {
@@ -365,6 +371,87 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         minDetectionConfidence: 0.65,
         minTrackingConfidence: 0.5,
       });
+
+      function getHandLabel(lm: any, handIndex: number, handCount: number, detected: string): string {
+        if (handCount === 2 && detected === "megumi") return "Seal Formed";
+        if (handCount === 1 && detected === "blood") return "Open Palm";
+        if (handCount === 1 && detected === "blackflash") return "Fist";
+        const isUpLm = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
+        const indexUp = isUpLm(8, 6);
+        const middleUp = isUpLm(12, 10);
+        const ringUp = isUpLm(16, 14);
+        const pinkyUp = isUpLm(20, 18);
+        const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
+        if (handCount === 1 && indexUp && middleUp && ringUp && pinkyUp && thumbUp) return "Open Palm";
+        const wrist = lm[0];
+        const isCurled = (tip: number) => Math.hypot(lm[tip].x - wrist.x, lm[tip].y - wrist.y) < 0.22;
+        if (handCount === 1 && isCurled(8) && isCurled(12) && isCurled(16) && isCurled(20)) return "Fist";
+        return "Hand Detected";
+      }
+
+      function drawDebugOverlay(
+        ctx: CanvasRenderingContext2D,
+        w: number,
+        h: number,
+        handLandmarks: any[],
+        detected: string
+      ) {
+        const FINGERTIP_IDS = [4, 8, 12, 16, 20];
+        const conn = window.HAND_CONNECTIONS as number[][] | undefined;
+        handLandmarks.forEach((lm: any, handIndex: number) => {
+          const label = getHandLabel(lm, handIndex, handLandmarks.length, detected);
+          let minX = 1, minY = 1, maxX = 0, maxY = 0;
+          const points: { x: number; y: number }[] = [];
+          for (let i = 0; i < 21; i++) {
+            if (lm[i]) {
+              const x = lm[i].x * w;
+              const y = lm[i].y * h;
+              points.push({ x, y });
+              minX = Math.min(minX, lm[i].x);
+              minY = Math.min(minY, lm[i].y);
+              maxX = Math.max(maxX, lm[i].x);
+              maxY = Math.max(maxY, lm[i].y);
+            }
+          }
+          if (conn && conn.length) {
+            ctx.strokeStyle = "rgba(180, 200, 255, 0.9)";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            conn.forEach(([a, b]) => {
+              if (lm[a] && lm[b]) {
+                ctx.moveTo(lm[a].x * w, lm[a].y * h);
+                ctx.lineTo(lm[b].x * w, lm[b].y * h);
+              }
+            });
+            ctx.stroke();
+          }
+          points.forEach((p, i) => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, FINGERTIP_IDS.includes(i) ? 5 : 3, 0, Math.PI * 2);
+            ctx.fillStyle = FINGERTIP_IDS.includes(i) ? "#00ccff" : "#ffffff";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.5)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          });
+          const pad = 0.02 * Math.min(w, h);
+          const bx = minX * w - pad;
+          const by = minY * h - pad;
+          const bw = (maxX - minX) * w + pad * 2;
+          const bh = (maxY - minY) * h + pad * 2;
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bx, by, bw, bh);
+          ctx.font = "11px system-ui, sans-serif";
+          ctx.fillStyle = "#fff";
+          ctx.strokeStyle = "#000";
+          ctx.lineWidth = 2;
+          const tx = minX * w;
+          const ty = minY * h - 6;
+          ctx.strokeText(label, tx, ty);
+          ctx.fillText(label, tx, ty);
+        });
+      }
 
       hands.onResults((results: any) => {
         canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
@@ -461,9 +548,10 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
 
         if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {
-            window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
-            window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
-
+            if (!DEBUG_MODE) {
+              window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
+              window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
+            }
             if (detected === "blood" || detected === "megumi") return;
 
             const isUpLm = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
@@ -505,8 +593,36 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
               }
             }
           });
+          if (DEBUG_MODE) {
+            drawDebugOverlay(canvasCtx, canvasEl.width, canvasEl.height, results.multiHandLandmarks, detected);
+          }
         }
         updateState(detected);
+
+        if (DEBUG_MODE) {
+          const handCount = handList.length;
+          const gestureRecognized = detected !== "neutral";
+          const palmFacing =
+            handCount === 1
+              ? palmNormalFromLandmarks(handList[0]).z < -0.2
+              : null;
+          if (debugPanelRef.current) {
+            debugPanelRef.current.innerHTML = `
+              <div class="debug-panel-row"><span>Hands detected:</span> <span class="${handCount > 0 ? "debug-valid" : "debug-invalid"}">${handCount}</span></div>
+              <div class="debug-panel-row"><span>Current technique:</span> <span>${currentTechNameRef.current}</span></div>
+              <div class="debug-panel-row"><span>Gesture recognized:</span> <span class="${gestureRecognized ? "debug-valid" : "debug-invalid"}">${gestureRecognized ? "Yes" : "No"}</span></div>
+              <div class="debug-panel-row"><span>Palm orientation:</span> <span class="${palmFacing === true ? "debug-valid" : palmFacing === false ? "debug-invalid" : ""}">${palmFacing === null ? "N/A" : palmFacing ? "Facing camera" : "Not facing"}</span></div>
+            `;
+          }
+          if (cameraContainerRef.current) {
+            cameraContainerRef.current.classList.remove("debug-border-none", "debug-border-invalid", "debug-border-valid");
+            if (handCount === 0) cameraContainerRef.current.classList.add("debug-border-none");
+            else if (!gestureRecognized) cameraContainerRef.current.classList.add("debug-border-invalid");
+            else cameraContainerRef.current.classList.add("debug-border-valid");
+          }
+        } else if (cameraContainerRef.current) {
+          cameraContainerRef.current.classList.remove("debug-border-none", "debug-border-invalid", "debug-border-valid");
+        }
       });
 
       const cameraUtils = new window.Camera(videoEl, {
@@ -656,10 +772,21 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
       {/* Camera feed — 720p for better finger detection and clearer preview */}
-      <div className="absolute bottom-[2%] left-4 w-[75vw] max-w-[360px] h-[32vh] border border-border z-20 rounded-[25px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)] camera-feed-container" style={{ transform: "scaleX(-1)" }}>
+      <div
+        ref={cameraContainerRef}
+        className="absolute bottom-[2%] left-4 w-[75vw] max-w-[360px] h-[32vh] border border-border z-20 rounded-[25px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)] camera-feed-container"
+        style={{ transform: "scaleX(-1)" }}
+      >
         <video ref={videoRef} className="w-full h-full object-cover opacity-90 camera-feed-video" playsInline muted />
         <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
       </div>
+
+      {DEBUG_MODE && (
+        <div
+          ref={debugPanelRef}
+          className="debug-panel fixed top-4 left-4 z-30 rounded px-3 py-2 text-white text-xs font-mono space-y-1 min-w-[200px]"
+        />
+      )}
     </>
   );
 };
