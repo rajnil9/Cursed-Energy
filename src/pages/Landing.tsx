@@ -30,8 +30,15 @@ export default function Landing() {
 
   return (
     <div className="landing-root">
-      {/* Full-screen still background image – put your image in public/landing-bg.png */}
-      <div className="landing-bg-image" />
+      {/* Cursed energy animated background – no image */}
+      <div className="landing-bg">
+        <div className="landing-bg-gradient" />
+        <div className="landing-bg-glow landing-bg-glow-1" />
+        <div className="landing-bg-glow landing-bg-glow-2" />
+        <div className="landing-bg-glow landing-bg-glow-3" />
+        <div className="landing-bg-energy" />
+        <div className="landing-bg-grain" />
+      </div>
 
       {/* Content: title at top center, buttons in center of screen */}
       <div className={`landing-content ${loaded ? "loaded" : ""}`}>
