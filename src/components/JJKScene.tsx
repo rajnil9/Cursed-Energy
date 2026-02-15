@@ -266,7 +266,7 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
     let animId: number;
     let confirmFrames = 0;
     let pendingGesture = "neutral";
-    const CONFIRM_FRAMES = 3; // Require 3 consecutive frames before switching gestures
+    const CONFIRM_FRAMES = 2; // Require 2 consecutive frames (faster response, still stable)
 
     function updateState(tech: string) {
       if (currentTech === tech) return;
@@ -340,7 +340,12 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
       const hands = new window.Hands({
         locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
       });
-      hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.75 });
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 2,           // Higher = better landmark accuracy
+        minDetectionConfidence: 0.6,  // Slightly lower = catch hands in more lighting
+        minTrackingConfidence: 0.5,   // Smooth tracking once hand is found
+      });
 
       hands.onResults((results: any) => {
         canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
@@ -392,8 +397,8 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
           canvasEl.height = videoEl.videoHeight;
           await hands.send({ image: videoEl });
         },
-        width: 640,
-        height: 480,
+        width: 1280,
+        height: 720,
       });
       cameraUtils.start();
     };
@@ -473,9 +478,9 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
       {/* Three.js canvas container */}
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
-      {/* Camera feed */}
+      {/* Camera feed - 720p for better hand tracking and display quality */}
       <div className="absolute bottom-[2%] left-[18%] -translate-x-1/2 w-[85vw] max-w-[450px] h-[42vh] border border-border z-20 rounded-[25px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)]" style={{ transform: "translateX(-50%) scaleX(-1)" }}>
-        <video ref={videoRef} className="w-full h-full object-cover opacity-80" playsInline />
+        <video ref={videoRef} className="w-full h-full object-cover opacity-90" playsInline muted />
         <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       </div>
     </>

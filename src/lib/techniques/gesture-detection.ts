@@ -1,16 +1,17 @@
 /**
- * Hand gesture detection helpers - improved accuracy with stricter thresholds
+ * Hand gesture detection helpers - balanced for reliability and accuracy
  */
 
 type Landmark = { x: number; y: number };
 
-// Stricter thresholds to reduce cross-detection between similar gestures
-const EXTENSION_THRESHOLD = 0.04; // Finger must extend this far above PIP to count as "up"
-const CURL_DISTANCE = 0.20;      // Fingertip must be this close to wrist to count as "curled"
-const PINCH_MAX = 0.055;         // Tighter pinch threshold for Hollow Purple
+// Balanced thresholds: loose enough to catch gestures reliably, strict enough to avoid cross-detection
+const EXTENSION_THRESHOLD = 0.025; // Finger extended above PIP (lower = more lenient)
+const CURL_DISTANCE = 0.24;       // Fingertip close to wrist = curled (higher = more lenient)
+const NOT_UP_THRESHOLD = 0.01;    // Finger "down" if extension below this (reject borderline)
+const PINCH_MAX = 0.065;          // Pinch distance for Hollow Purple
 
 /**
- * Finger is CLEARLY extended up - tip is significantly above PIP joint
+ * Finger is extended up - tip above PIP joint
  */
 function isFingerUp(lm: Landmark[], tip: number, pip: number): boolean {
   const extension = lm[pip].y - lm[tip].y; // positive when tip is above pip
@@ -18,7 +19,7 @@ function isFingerUp(lm: Landmark[], tip: number, pip: number): boolean {
 }
 
 /**
- * Finger is CLEARLY curled down - tip is close to wrist (palm)
+ * Finger is curled down - tip close to wrist (palm)
  */
 function isFingerDown(lm: Landmark[], tip: number, wrist: Landmark): boolean {
   const d = Math.hypot(lm[tip].x - wrist.x, lm[tip].y - wrist.y);
@@ -26,11 +27,11 @@ function isFingerDown(lm: Landmark[], tip: number, wrist: Landmark): boolean {
 }
 
 /**
- * Finger is clearly NOT up (either curled or neutral) - avoids ambiguous half-extended state
+ * Finger is NOT up - tip at or below PIP (for distinguishing Red vs Void vs Dismantle)
  */
 function isFingerNotUp(lm: Landmark[], tip: number, pip: number): boolean {
   const extension = lm[pip].y - lm[tip].y;
-  return extension <= EXTENSION_THRESHOLD;
+  return extension <= NOT_UP_THRESHOLD;
 }
 
 export function isFist(lm: Landmark[]) {
@@ -96,8 +97,8 @@ export function isMegumiGesture(lm: Landmark[]): boolean {
 }
 
 export function isHakariGesture(lm: Landmark[]): boolean {
-  // Thumb only
-  const thumbUp = lm[4].y < lm[3].y - 0.02 && lm[4].y < lm[2].y;
+  // Thumb only - thumb tip above IP joint
+  const thumbUp = lm[4].y < lm[3].y - 0.01 && lm[4].y < lm[2].y;
   const indexUp = isFingerUp(lm, 8, 6);
   const middleUp = isFingerUp(lm, 12, 10);
   const ringUp = isFingerUp(lm, 16, 14);
@@ -107,7 +108,7 @@ export function isHakariGesture(lm: Landmark[]): boolean {
 
 export function isMahitoGesture(lm: Landmark[]): boolean {
   // Thumb + Pinky
-  const thumbUp = lm[4].y < lm[3].y - 0.02 && lm[4].y < lm[2].y;
+  const thumbUp = lm[4].y < lm[3].y - 0.01 && lm[4].y < lm[2].y;
   const indexUp = isFingerUp(lm, 8, 6);
   const middleUp = isFingerUp(lm, 12, 10);
   const ringUp = isFingerUp(lm, 16, 14);
