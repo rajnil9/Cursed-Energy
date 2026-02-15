@@ -5,7 +5,17 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { getBlackFlash, BLACK_FLASH_CONFIG } from "@/lib/techniques/black-flash";
 import { getDismantle, DISMANTLE_CONFIG } from "@/lib/techniques/dismantle";
-import { isFist, isDismantleGesture } from "@/lib/techniques/gesture-detection";
+import {
+  isFist,
+  isDismantleGesture,
+  isShrineGesture,
+  isVoidGesture,
+  isRedGesture,
+  isMegumiGesture,
+  isHakariGesture,
+  isMahitoGesture,
+  isPinchGesture,
+} from "@/lib/techniques/gesture-detection";
 
 declare global {
   interface Window {
@@ -254,8 +264,9 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
     let shakeIntensity = 0;
     let glowColor = "#00ffff";
     let animId: number;
-    let fistFrames = 0;
-    const FIST_CONFIRM_FRAMES = 3;
+    let confirmFrames = 0;
+    let pendingGesture = "neutral";
+    const CONFIRM_FRAMES = 3; // Require 3 consecutive frames before switching gestures
 
     function updateState(tech: string) {
       if (currentTech === tech) return;
@@ -329,55 +340,50 @@ const JJKScene = ({ onTechniqueChange }: Props) => {
       const hands = new window.Hands({
         locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
       });
-      hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.7 });
+      hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.75 });
 
       hands.onResults((results: any) => {
         canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-        let detected = "neutral";
+        let rawDetected = "neutral";
 
         if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {
             window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
             window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
 
-            const isUp = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
-            const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
-
-            const indexUp = isUp(8, 6);
-            const middleUp = isUp(12, 10);
-            const ringUp = isUp(16, 14);
-            const pinkyUp = isUp(20, 18);
-            const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
-
-            // Gesture detection (order matters - most specific first)
+            // Stricter gesture checks - order matters (most specific first)
             if (isFist(lm)) {
-              fistFrames++;
-              if (fistFrames >= FIST_CONFIRM_FRAMES) {
-                detected = "blackflash"; // ✊ Fist → Black Flash
-              }
-            } else {
-              fistFrames = 0;
-              if (pinch < 0.04) {
-                detected = "purple"; // Pinch → Hollow Purple
-              } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
-                detected = "mahito"; // 🤙 Thumb + Pinky → Self-Embodiment of Perfection
-              } else if (indexUp && !middleUp && !ringUp && pinkyUp) {
-                detected = "megumi"; // 🤘 Horns → Chimera Shadow Garden
-              } else if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
-                detected = "hakari"; // 👍 Thumb only → Idle Death Gamble
-              } else if (indexUp && middleUp && ringUp && !pinkyUp) {
-                detected = "dismantle"; // 🤟 3 fingers (knife hand) → Dismantle
-              } else if (indexUp && middleUp && ringUp && pinkyUp) {
-                detected = "shrine"; // 🖐️ All fingers → Malevolent Shrine
-              } else if (indexUp && middleUp && !ringUp) {
-                detected = "void"; // ✌️ Peace → Infinite Void
-              } else if (indexUp && !middleUp) {
-                detected = "red"; // ☝️ Index only → Red
-              }
+              rawDetected = "blackflash";
+            } else if (isPinchGesture(lm)) {
+              rawDetected = "purple";
+            } else if (isMahitoGesture(lm)) {
+              rawDetected = "mahito";
+            } else if (isMegumiGesture(lm)) {
+              rawDetected = "megumi";
+            } else if (isHakariGesture(lm)) {
+              rawDetected = "hakari";
+            } else if (isDismantleGesture(lm)) {
+              rawDetected = "dismantle";
+            } else if (isShrineGesture(lm)) {
+              rawDetected = "shrine";
+            } else if (isVoidGesture(lm)) {
+              rawDetected = "void";
+            } else if (isRedGesture(lm)) {
+              rawDetected = "red";
             }
           });
         }
-        updateState(detected);
+
+        // Confirmation: only switch after CONFIRM_FRAMES consecutive same gesture (reduces flicker)
+        if (rawDetected === pendingGesture) {
+          confirmFrames++;
+          if (confirmFrames >= CONFIRM_FRAMES) {
+            updateState(rawDetected);
+          }
+        } else {
+          pendingGesture = rawDetected;
+          confirmFrames = 1;
+        }
       });
 
       const cameraUtils = new window.Camera(videoEl, {
