@@ -8,7 +8,7 @@ const gestures = [
   { name: "Chimera Shadow Garden", gesture: "🤘 Index + Pinky up", color: "#6633aa" },
   { name: "Black Flash", gesture: "✊ Fist (all fingers closed)", color: "#ff1a1a" },
   { name: "Dismantle", gesture: "🤟 Index + Middle + Ring up", color: "#8b0000" },
-  { name: "Blood Manipulation", gesture: "🖐️🖐️ Two hands, all fingers up, palms close", color: "#6B0F1A" },
+  { name: "Blood Manipulation", gesture: "🖐️ All fingers + thumb up", color: "#6B0F1A" },
 ];
 
 const GestureGuide = () => {
@@ -18,14 +18,14 @@ const GestureGuide = () => {
         Hand Gestures
       </h3>
       {gestures.map((g) => (
-        <div key={g.name} className="flex items-center gap-2 text-[11px]">
-          <span className="text-base leading-none shrink-0">{g.gesture.split(" ")[0]}</span>
-          <div className="min-w-0">
-            <div className="font-semibold truncate" style={{ color: g.color }}>
+        <div key={g.name} className="flex items-start gap-2 text-[11px]">
+          <span className="text-base leading-none shrink-0 pt-0.5">{g.gesture.split(" ")[0]}</span>
+          <div className="min-w-0 flex-1 break-words">
+            <div className="font-semibold leading-tight" style={{ color: g.color }}>
               {g.name}
             </div>
-            <div className="text-muted-foreground text-[9px] truncate">
-              {g.gesture.substring(g.gesture.indexOf(" ") + 1)}
+            <div className="text-muted-foreground text-[9px] leading-tight mt-0.5">
+              {g.gesture.indexOf(" ") >= 0 ? g.gesture.substring(g.gesture.indexOf(" ") + 1) : g.gesture}
             </div>
           </div>
         </div>

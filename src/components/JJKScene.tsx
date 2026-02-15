@@ -360,35 +360,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         }
         onHandScreenPositionsRef.current?.(screenPoints);
 
-        const isUp = (lm: any, tip: number, pip: number) => lm[tip].y < lm[pip].y;
-        const allFingersExtended = (lm: any) => {
-          const indexUp = isUp(lm, 8, 6);
-          const middleUp = isUp(lm, 12, 10);
-          const ringUp = isUp(lm, 16, 14);
-          const pinkyUp = isUp(lm, 20, 18);
-          const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
-          return indexUp && middleUp && ringUp && pinkyUp && thumbUp;
-        };
-        const PALM_PROXIMITY = 0.22;
-
-        if (results.multiHandLandmarks && results.multiHandLandmarks.length === 2) {
-          const lm1 = results.multiHandLandmarks[0];
-          const lm2 = results.multiHandLandmarks[1];
-          if (allFingersExtended(lm1) && allFingersExtended(lm2)) {
-            const palm1 = lm1[9];
-            const palm2 = lm2[9];
-            const palmDist = Math.hypot(palm1.x - palm2.x, palm1.y - palm2.y);
-            let avgTipDist = 0;
-            const tips = [4, 8, 12, 16, 20];
-            for (const ti of tips) {
-              avgTipDist += Math.hypot(lm1[ti].x - lm2[ti].x, lm1[ti].y - lm2[ti].y);
-            }
-            avgTipDist /= tips.length;
-            if (palmDist < PALM_PROXIMITY && avgTipDist < 0.28) detected = "blood";
-          }
-        }
-
-        if (results.multiHandLandmarks && detected !== "blood") {
+        if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {
             window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
             window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
@@ -415,7 +387,9 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
               if (fistFrames >= FIST_CONFIRM_FRAMES) detected = "blackflash";
             } else {
               fistFrames = 0;
-              if (pinch < 0.05 && middleUp) {
+              if (indexUp && middleUp && ringUp && pinkyUp && thumbUp) {
+                detected = "blood";
+              } else if (pinch < 0.05 && middleUp) {
                 detected = "purple";
               } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
                 detected = "mahito";
@@ -433,11 +407,6 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
                 detected = "red";
               }
             }
-          });
-        } else if (results.multiHandLandmarks) {
-          results.multiHandLandmarks.forEach((lm: any) => {
-            window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
-            window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
           });
         }
         updateState(detected);
