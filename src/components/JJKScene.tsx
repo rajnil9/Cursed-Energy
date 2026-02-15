@@ -382,7 +382,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions, cameraDeviceId, ca
               if (fistFrames >= FIST_CONFIRM_FRAMES) detected = "blackflash";
             } else {
               fistFrames = 0;
-              if (pinch < 0.05) {
+              if (pinch < 0.05 && middleUp) {
                 detected = "purple";
               } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
                 detected = "mahito";
