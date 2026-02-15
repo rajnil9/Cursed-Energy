@@ -91,22 +91,24 @@
   backdrop-filter: blur(10px);
 }
 
-/* ─── Landing page: Gojo vs Sukuna artwork bg + animations ── */
+/* ─── Landing: image is the hero, no black background ──────────────── */
 .landing-root {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #050308;
+  /* No background-color: image only */
 }
 
-/* Full-screen background: exact artwork, cover viewport, aspect ratio preserved */
+/* Full-screen background: image only, no solid color */
 .landing-bg-image {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-color: #08050a;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   background-image: url("/gojo-sukuna-bg.png");
   background-size: cover;
   background-position: center;
@@ -114,13 +116,13 @@
   animation: landing-bg-zoom 25s ease-in-out infinite;
 }
 
-/* Very light dark overlay for text readability only – does not alter artwork */
+/* Optional: very subtle overlay only if needed – max 20% black */
 .landing-vignette {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: radial-gradient(ellipse 80% 90% at 50% 50%, transparent 50%, rgba(0, 0, 0, 0.25) 100%);
+  background: radial-gradient(ellipse 85% 90% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.12) 100%);
 }
 
 .landing-content {
@@ -148,33 +150,31 @@
   flex-shrink: 0;
 }
 
+/* Title: bold cinematic Japanese, text-shadow glow (no heavy blur) */
 .landing-title {
   font-family: 'Zen Antique Soft', serif;
   font-size: clamp(2.5rem, 8vw, 5rem);
-  font-weight: 400;
-  letter-spacing: 0.2em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   color: #fff;
-  /* Blue glow (Gojo side) + red glow (Sukuna side) – soft, split feel */
   text-shadow:
-    -0.02em 0 0.08em rgba(80, 140, 255, 0.8),
-    0.02em 0 0.08em rgba(220, 60, 80, 0.8),
-    0 0 24px rgba(100, 150, 255, 0.5),
-    0 0 40px rgba(200, 60, 100, 0.4);
-  animation: landing-title-flicker 5s ease-in-out infinite;
+    0 0 0.03em rgba(220, 70, 90, 0.9),
+    0 0 0.05em rgba(90, 130, 255, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(80, 100, 255, 0.25),
+    0 2px 8px rgba(200, 60, 100, 0.25);
   margin: 0;
 }
 
+/* Subtitle: smaller, elegant, white with subtle opacity */
 .landing-subtitle {
-  font-family: 'Orbitron', sans-serif;
-  font-size: clamp(0.75rem, 2vw, 1rem);
-  font-weight: 500;
-  letter-spacing: 0.35em;
-  color: rgba(235, 220, 255, 0.95);
-  text-shadow:
-    0 0 10px rgba(100, 140, 255, 0.4),
-    0 0 8px rgba(200, 80, 120, 0.3);
-  margin: 0.75rem 0 0;
-  animation: landing-subtitle-glow 4s ease-in-out infinite;
+  font-family: 'Zen Antique Soft', serif;
+  font-size: clamp(0.7rem, 1.8vw, 0.95rem);
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  margin: 0.6rem 0 0;
 }
 
 /* Center of screen: PLAY + EXIT */
@@ -211,36 +211,35 @@
   font-size: 0.85em;
 }
 
-/* PLAY: blue-to-red gradient border + mixed glow */
+/* PLAY: transparent, thin gradient border (red left, blue right) */
 .landing-btn-play {
   color: #fff;
-  border: 2px solid transparent;
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)) padding-box,
-    linear-gradient(90deg, rgba(80, 140, 255, 0.85), rgba(220, 60, 100, 0.85)) border-box;
-  box-shadow:
-    0 0 18px rgba(80, 140, 255, 0.35),
-    0 0 18px rgba(220, 60, 100, 0.35);
+  border: 1px solid transparent;
+  background: transparent;
+  background-clip: padding-box;
+  box-shadow: none;
+  border-image: linear-gradient(90deg, rgba(220, 60, 100, 0.7), rgba(80, 140, 255, 0.7)) 1;
 }
 
 .landing-btn-play:hover:not(:disabled) {
-  transform: scale(1.06);
+  transform: scale(1.04);
   box-shadow:
-    0 0 24px rgba(80, 140, 255, 0.5),
-    0 0 24px rgba(220, 60, 100, 0.5),
-    inset 0 0 20px rgba(0, 0, 0, 0.2);
+    0 0 12px rgba(220, 60, 100, 0.25),
+    0 0 12px rgba(80, 140, 255, 0.25);
 }
 
 .landing-btn-exit {
-  background: rgba(0, 0, 0, 0.45);
-  color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
 }
 
 .landing-btn-exit:hover:not(:disabled) {
-  color: rgba(255, 220, 220, 0.98);
-  box-shadow: 0 2px 0 0 rgba(200, 50, 80, 0.5);
-  background: rgba(15, 0, 8, 0.55);
+  color: rgba(255, 255, 255, 0.98);
+  border-bottom-color: rgba(220, 80, 100, 0.6);
+  box-shadow: none;
 }
 
 /* Transition: crack + fade to black */
@@ -290,16 +289,6 @@
 }
 
 
-@keyframes landing-title-flicker {
-  0%, 95%, 100% { opacity: 1; }
-  97% { opacity: 0.96; }
-  98% { opacity: 1; }
-}
-
-@keyframes landing-subtitle-glow {
-  0%, 100% { opacity: 0.92; }
-  50% { opacity: 1; }
-}
 
 /* ─── Experience page: EXIT DOMAIN button ─────────────────── */
 .experience-exit-btn {
