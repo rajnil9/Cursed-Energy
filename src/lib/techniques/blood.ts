@@ -1,161 +1,104 @@
 /**
  * Blood Manipulation (Choso) - Particle effect
- * Cursed blood condensing between two merged palms → Piercing Blood
- * Gesture: Two hands, all fingers extended, palms close together
+ * High-pressure blood stream from palm, oriented by wrist/palm normal.
+ * Trigger: One hand, all five fingers extended, palm facing camera.
  */
 
+export type BloodOrigin = { x: number; y: number; z: number };
+export type BloodDirection = { x: number; y: number; z: number };
+
 const CRIMSON = { r: 0.55, g: 0.0, b: 0.05 };
-const MAROON = { r: 0.35, g: 0.0, b: 0.08 };
-const DARK_MIST = { r: 0.2, g: 0.0, b: 0.03 };
-const BRIGHT_BEAM = { r: 0.95, g: 0.1, b: 0.15 };
+const STREAM_BRIGHT = { r: 0.75, g: 0.05, b: 0.1 };
+const MIST = { r: 0.25, g: 0.0, b: 0.03 };
 
-export function getBlood(i: number, count: number, t: number) {
+const STREAM_LENGTH = 55;
+const STREAM_WIDTH = 0.35;
+const MIST_SPREAD = 3;
+
+/** Deterministic jitter from particle index */
+function jitter(i: number, axis: number): number {
+  const s = (i * 7 + axis * 13) % 100 / 100;
+  return (s - 0.5) * 2;
+}
+
+function cross(a: BloodDirection, b: BloodDirection): BloodDirection {
+  return {
+    x: a.y * b.z - a.z * b.y,
+    y: a.z * b.x - a.x * b.z,
+    z: a.x * b.y - a.y * b.x,
+  };
+}
+
+function normalize(d: BloodDirection): BloodDirection {
+  const len = Math.sqrt(d.x * d.x + d.y * d.y + d.z * d.z) || 1;
+  return { x: d.x / len, y: d.y / len, z: d.z / len };
+}
+
+/**
+ * Pure focused pressurized blood stream from origin along direction.
+ * - Condensed blood at palm center (first 5%)
+ * - Narrow high-pressure stream along palm normal (next 40%)
+ * - Small trailing mist (next 8%)
+ * - Rest invisible (smooth fade when switching away)
+ */
+export function getBlood(
+  i: number,
+  count: number,
+  origin: BloodOrigin,
+  dir: BloodDirection
+): { x: number; y: number; z: number; r: number; g: number; b: number; s: number } {
   const ti = i / count;
-  const tLoop = t % 8;
-  const phase = getPhase(tLoop);
-  const seed = (i * 0.1 + t * 2) % 1;
 
-  if (phase === 0) {
-    return phaseMist(i, count, tLoop, ti, seed);
-  }
-  if (phase === 1) {
-    return phaseSphere(i, count, tLoop, ti, seed);
-  }
-  if (phase === 2) {
-    return phaseCompress(i, count, tLoop, ti, seed);
-  }
-  if (phase === 3) {
-    return phaseBeam(i, count, tLoop, ti, seed);
-  }
-  if (phase === 4) {
-    return phaseTrail(i, count, tLoop, ti, seed);
-  }
-  return phaseIdle(i, count, t, ti, seed);
-}
-
-function getPhase(t: number): number {
-  if (t < 2) return 0;
-  if (t < 4) return 1;
-  if (t < 5) return 2;
-  if (t < 6) return 3;
-  if (t < 8) return 4;
-  return 5;
-}
-
-function phaseMist(i: number, count: number, t: number, ti: number, seed: number) {
-  const progress = t / 2;
-  const spread = 25 + (1 - progress) * 20;
-  const theta = seed * Math.PI * 2 + t * 0.5;
-  const phi = (ti - 0.5) * Math.PI * 0.8;
-  const r = spread * (0.3 + 0.7 * progress) * (0.8 + seed * 0.4);
-  return {
-    x: r * Math.sin(phi) * Math.cos(theta),
-    y: r * Math.sin(phi) * Math.sin(theta) * 0.6,
-    z: r * Math.cos(phi),
-    ...DARK_MIST,
-    s: 0.6 + progress * 0.4,
-  };
-}
-
-function phaseSphere(i: number, count: number, t: number, ti: number, seed: number) {
-  const progress = (t - 2) / 2;
-  const radius = 18 - progress * 10;
-  const angle = ti * Math.PI * 4 + t * 2;
-  const spiral = (1 - progress) * 15;
-  const r = spiral + radius * (0.3 + 0.7 * seed);
-  const theta = angle + seed * 6.28;
-  const phi = Math.acos(2 * (ti + seed) % 1 - 1);
-  return {
-    x: r * Math.sin(phi) * Math.cos(theta),
-    y: r * Math.sin(phi) * Math.sin(theta),
-    z: r * Math.cos(phi),
-    ...CRIMSON,
-    s: 1.2 + seed * 0.5,
-  };
-}
-
-function phaseCompress(i: number, count: number, t: number, ti: number, seed: number) {
-  const progress = (t - 4) / 1;
-  const radius = 8 - progress * 6;
-  const theta = ti * Math.PI * 2 + t * 3;
-  const phi = Math.acos(2 * seed - 1);
-  const r = radius * (0.7 + seed * 0.3);
-  const glow = 0.5 + progress * 0.5;
-  return {
-    x: r * Math.sin(phi) * Math.cos(theta),
-    y: r * Math.sin(phi) * Math.sin(theta),
-    z: r * Math.cos(phi),
-    r: CRIMSON.r * glow + 0.3,
-    g: CRIMSON.g,
-    b: CRIMSON.b + 0.05,
-    s: 1.5 + progress * 1.2,
-  };
-}
-
-function phaseBeam(i: number, count: number, t: number, ti: number, seed: number) {
-  const progress = (t - 5) / 1;
-  const beamLength = 80 * progress;
-  const u = (i * 17 + 1) % 100 / 100;
-  const v = (i * 31 + 3) % 100 / 100;
-  if (i < count * 0.15) {
-    const dist = (i / (count * 0.15)) * beamLength;
-    const spread = 2 - progress * 1.5;
-    const theta = seed * 6.28;
+  if (ti < 0.05) {
+    const r = 1.5 + jitter(i, 0) * 0.8;
+    const theta = (i * 0.7) % (Math.PI * 2);
+    const phi = (i * 0.3) % Math.PI;
     return {
-      x: dist + (u - 0.5) * spread,
-      y: (v - 0.5) * spread,
-      z: ((u + v) % 1 - 0.5) * spread,
-      ...BRIGHT_BEAM,
-      s: 2.5,
+      x: origin.x + r * Math.sin(phi) * Math.cos(theta),
+      y: origin.y + r * Math.sin(phi) * Math.sin(theta),
+      z: origin.z + r * Math.cos(phi),
+      ...CRIMSON,
+      s: 1.2,
     };
   }
-  if (i < count * 0.25) {
-    const core = ((i - count * 0.15) / (count * 0.1)) * beamLength;
+
+  if (ti < 0.45) {
+    const t = (ti - 0.05) / 0.4;
+    const dist = t * STREAM_LENGTH;
+    const width = STREAM_WIDTH * (1 + (1 - t) * 0.5);
+    const d = normalize(dir);
+    const up = { x: 0, y: 1, z: 0 };
+    let perp1 = cross(d, up);
+    const perp1Len = Math.sqrt(perp1.x * perp1.x + perp1.y * perp1.y + perp1.z * perp1.z);
+    if (perp1Len < 0.01) perp1 = cross(d, { x: 1, y: 0, z: 0 });
+    perp1 = normalize(perp1);
+    const perp2 = normalize(cross(d, perp1));
+    const j1 = jitter(i, 0) * width;
+    const j2 = jitter(i, 1) * width;
     return {
-      x: core,
-      y: 0,
-      z: 0,
-      r: 1,
-      g: 0.15,
-      b: 0.2,
-      s: 3,
+      x: origin.x + d.x * dist + perp1.x * j1 + perp2.x * j2,
+      y: origin.y + d.y * dist + perp1.y * j1 + perp2.y * j2,
+      z: origin.z + d.z * dist + perp1.z * j1 + perp2.z * j2,
+      ...STREAM_BRIGHT,
+      s: 0.9 + (1 - t) * 0.4,
     };
   }
-  return phaseIdle(i, count, t, ti, seed);
-}
 
-function phaseTrail(i: number, count: number, t: number, ti: number, seed: number) {
-  const progress = (t - 6) / 2;
-  const fade = 1 - progress;
-  const u = (i * 13) % 100 / 100;
-  const v = (i * 7) % 100 / 100;
-  if (i < count * 0.08) {
-    const dist = 40 + (i / (count * 0.08)) * 50;
+  if (ti < 0.53) {
+    const t = (ti - 0.45) / 0.08;
+    const d = normalize(dir);
+    const dist = STREAM_LENGTH * (0.7 + t * 0.3) + jitter(i, 0) * MIST_SPREAD;
+    const spread = MIST_SPREAD * (1 + jitter(i, 1));
     return {
-      x: dist,
-      y: (u - 0.5) * 3,
-      z: (v - 0.5) * 3,
-      r: MAROON.r * fade,
-      g: MAROON.g,
-      b: MAROON.b * fade,
-      s: 0.8 * fade,
+      x: origin.x + d.x * dist + jitter(i, 2) * spread,
+      y: origin.y + d.y * dist + jitter(i, 0) * spread,
+      z: origin.z + d.z * dist + jitter(i, 1) * spread,
+      ...MIST,
+      s: 0.4,
     };
   }
-  return phaseIdle(i, count, t, ti, seed);
-}
 
-function phaseIdle(i: number, count: number, t: number, ti: number, seed: number) {
-  const radius = 12 + Math.sin(t + ti * 10) * 3;
-  const theta = ti * Math.PI * 2 + t * 0.8;
-  const phi = Math.acos(2 * (seed + t * 0.2) % 1 - 1);
-  const r = radius * (0.6 + seed * 0.4);
-  return {
-    x: r * Math.sin(phi) * Math.cos(theta),
-    y: r * Math.sin(phi) * Math.sin(theta) * 0.7,
-    z: r * Math.cos(phi),
-    ...CRIMSON,
-    s: 0.8 + seed * 0.4,
-  };
+  return { x: 0, y: 0, z: 0, r: 0, g: 0, b: 0, s: 0 };
 }
 
 export const BLOOD_CONFIG = {

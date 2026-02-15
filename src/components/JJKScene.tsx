@@ -261,6 +261,33 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
     let bloodStartTime = 0;
     const FIST_CONFIRM_FRAMES = 3;
 
+    // Blood: palm origin and direction (Three.js space), updated from hand landmarks
+    const BLOOD_SCALE = 50;
+    const bloodOrigin = { x: 0, y: 0, z: 0 };
+    const bloodDir = { x: 0, y: 0, z: 1 };
+    const bloodDirSmooth = { x: 0, y: 0, z: 1 };
+    const BLOOD_DIR_LERP = 0.12;
+
+    function mapLandmarkToThree(lm: { x: number; y: number; z: number }) {
+      return {
+        x: (lm.x - 0.5) * BLOOD_SCALE,
+        y: (0.5 - lm.y) * BLOOD_SCALE,
+        z: -lm.z * 30,
+      };
+    }
+    function palmNormalFromLandmarks(lm: any): { x: number; y: number; z: number } {
+      const wrist = { x: lm[0].x, y: lm[0].y, z: lm[0].z };
+      const idxMcp = { x: lm[5].x, y: lm[5].y, z: lm[5].z };
+      const pinkyMcp = { x: lm[17].x, y: lm[17].y, z: lm[17].z };
+      const v1 = { x: idxMcp.x - wrist.x, y: idxMcp.y - wrist.y, z: idxMcp.z - wrist.z };
+      const v2 = { x: pinkyMcp.x - wrist.x, y: pinkyMcp.y - wrist.y, z: pinkyMcp.z - wrist.z };
+      const cx = v1.y * v2.z - v1.z * v2.y;
+      const cy = v1.z * v2.x - v1.x * v2.z;
+      const cz = v1.x * v2.y - v1.y * v2.x;
+      const len = Math.sqrt(cx * cx + cy * cy + cz * cz) || 1;
+      return { x: cx / len, y: cy / len, z: cz / len };
+    }
+
     function updateState(tech: string) {
       if (currentTech === tech) return;
       currentTech = tech;
@@ -297,7 +324,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
           case "megumi": return getMegumi(i);
           case "blackflash": return getBlackFlash(i, COUNT);
           case "dismantle": return getDismantle(i, COUNT);
-          case "blood": return getBlood(i, COUNT, 0);
+          case "blood": return getBlood(i, COUNT, bloodOrigin, bloodDirSmooth);
           default:
             if (i < COUNT * 0.05) {
               const r = 15 + Math.random() * 20;
@@ -360,10 +387,45 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         }
         onHandScreenPositionsRef.current?.(screenPoints);
 
+        // Blood: only when exactly one hand, all five extended, palm facing camera
+        const hands = results.multiHandLandmarks ?? [];
+        if (hands.length === 1) {
+          const lm = hands[0];
+          const isUpLm = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
+          const indexUp = isUpLm(8, 6);
+          const middleUp = isUpLm(12, 10);
+          const ringUp = isUpLm(16, 14);
+          const pinkyUp = isUpLm(20, 18);
+          const thumbUp = lm[4].y < lm[3].y && lm[4].y < lm[2].y;
+          const palmNorm = palmNormalFromLandmarks(lm);
+          const palmFacingCamera = palmNorm.z < -0.2;
+          if (indexUp && middleUp && ringUp && pinkyUp && thumbUp && palmFacingCamera) {
+            detected = "blood";
+            const w = mapLandmarkToThree(lm[0]);
+            const i5 = mapLandmarkToThree(lm[5]);
+            const i17 = mapLandmarkToThree(lm[17]);
+            bloodOrigin.x = (w.x + i5.x + i17.x) / 3;
+            bloodOrigin.y = (w.y + i5.y + i17.y) / 3;
+            bloodOrigin.z = (w.z + i5.z + i17.z) / 3;
+            bloodDir.x = palmNorm.x;
+            bloodDir.y = -palmNorm.y;
+            bloodDir.z = -palmNorm.z;
+            const dlen = Math.sqrt(bloodDir.x * bloodDir.x + bloodDir.y * bloodDir.y + bloodDir.z * bloodDir.z) || 1;
+            bloodDir.x /= dlen;
+            bloodDir.y /= dlen;
+            bloodDir.z /= dlen;
+            bloodOrigin.x += bloodDir.x * 2;
+            bloodOrigin.y += bloodDir.y * 2;
+            bloodOrigin.z += bloodDir.z * 2;
+          }
+        }
+
         if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {
             window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
             window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
+
+            if (detected === "blood") return;
 
             const isUpLm = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
             const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
@@ -387,9 +449,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
               if (fistFrames >= FIST_CONFIRM_FRAMES) detected = "blackflash";
             } else {
               fistFrames = 0;
-              if (indexUp && middleUp && ringUp && pinkyUp && thumbUp) {
-                detected = "blood";
-              } else if (pinch < 0.05 && middleUp) {
+              if (pinch < 0.05 && middleUp) {
                 detected = "purple";
               } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
                 detected = "mahito";
@@ -442,9 +502,11 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       const siz = particles.geometry.attributes.size.array as Float32Array;
 
       if (currentTech === "blood") {
-        const t = performance.now() / 1000 - bloodStartTime;
+        bloodDirSmooth.x += (bloodDir.x - bloodDirSmooth.x) * BLOOD_DIR_LERP;
+        bloodDirSmooth.y += (bloodDir.y - bloodDirSmooth.y) * BLOOD_DIR_LERP;
+        bloodDirSmooth.z += (bloodDir.z - bloodDirSmooth.z) * BLOOD_DIR_LERP;
         for (let i = 0; i < COUNT; i++) {
-          const p = getBlood(i, COUNT, t);
+          const p = getBlood(i, COUNT, bloodOrigin, bloodDirSmooth);
           targetPositions[i * 3] = p.x;
           targetPositions[i * 3 + 1] = p.y;
           targetPositions[i * 3 + 2] = p.z;
@@ -484,8 +546,7 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
         particles.rotation.y += 0.003;
         particles.rotation.z += 0.002;
       } else if (currentTech === "blood") {
-        particles.rotation.y += 0.02;
-        particles.rotation.x += 0.01;
+        particles.rotation.set(0, 0, 0);
       } else {
         particles.rotation.y += 0.005;
       }
