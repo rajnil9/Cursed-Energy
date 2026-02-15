@@ -91,6 +91,17 @@
   backdrop-filter: blur(10px);
 }
 
+/* Camera feed — sharper scaling and better visibility for hand tracking */
+.camera-feed-container {
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.camera-feed-video {
+  image-rendering: auto;
+  transform: translateZ(0);
+}
+
 /* ─── Landing: cursed technique animated background ──────────────── */
 .landing-root {
   position: fixed;
