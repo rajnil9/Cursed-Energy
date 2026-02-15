@@ -288,6 +288,44 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
       return { x: cx / len, y: cy / len, z: cz / len };
     }
 
+    // Chimera Shadow Garden: two-hand seal (debounce + smoothed landmarks)
+    const CHIMERA_DEBOUNCE_MS = 200;
+    const CHIMERA_PALM_DIST_MAX = 0.18;
+    const CHIMERA_FINGERTIP_AVG_MAX = 0.14;
+    const CHIMERA_CENTER_X_MIN = 0.25;
+    const CHIMERA_CENTER_X_MAX = 0.75;
+    const CHIMERA_CENTER_Y_MIN = 0.3;
+    const CHIMERA_CENTER_Y_MAX = 0.85;
+    const CHIMERA_SMOOTH_ALPHA = 0.75;
+    let chimeraConfirmStart = 0;
+    let chimeraSmoothedPalm0 = { x: 0.5, y: 0.5 };
+    let chimeraSmoothedPalm1 = { x: 0.5, y: 0.5 };
+
+    function palmCenter(lm: any): { x: number; y: number; z: number } {
+      return {
+        x: (lm[0].x + lm[5].x + lm[17].x) / 3,
+        y: (lm[0].y + lm[5].y + lm[17].y) / 3,
+        z: (lm[0].z + lm[5].z + lm[17].z) / 3,
+      };
+    }
+    function extendedFingerCount(lm: any): number {
+      const isUp = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
+      let n = 0;
+      if (isUp(8, 6)) n++;
+      if (isUp(12, 10)) n++;
+      if (isUp(16, 14)) n++;
+      if (isUp(20, 18)) n++;
+      return n;
+    }
+    function avgFingertipDistance(lm0: any, lm1: any): number {
+      const tips = [8, 12, 16, 20];
+      let sum = 0;
+      for (const t of tips) {
+        sum += Math.hypot(lm0[t].x - lm1[t].x, lm0[t].y - lm1[t].y, (lm0[t].z ?? 0) - (lm1[t].z ?? 0));
+      }
+      return sum / tips.length;
+    }
+
     function updateState(tech: string) {
       if (currentTech === tech) return;
       currentTech = tech;
@@ -420,12 +458,55 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
           }
         }
 
+        // Chimera Shadow Garden: exactly two hands, close seal, palms facing each other, near center
+        const handList = results.multiHandLandmarks ?? [];
+        if (handList.length === 2) {
+          const lm0 = handList[0];
+          const lm1 = handList[1];
+          const c0 = palmCenter(lm0);
+          const c1 = palmCenter(lm1);
+          chimeraSmoothedPalm0.x = CHIMERA_SMOOTH_ALPHA * chimeraSmoothedPalm0.x + (1 - CHIMERA_SMOOTH_ALPHA) * c0.x;
+          chimeraSmoothedPalm0.y = CHIMERA_SMOOTH_ALPHA * chimeraSmoothedPalm0.y + (1 - CHIMERA_SMOOTH_ALPHA) * c0.y;
+          chimeraSmoothedPalm1.x = CHIMERA_SMOOTH_ALPHA * chimeraSmoothedPalm1.x + (1 - CHIMERA_SMOOTH_ALPHA) * c1.x;
+          chimeraSmoothedPalm1.y = CHIMERA_SMOOTH_ALPHA * chimeraSmoothedPalm1.y + (1 - CHIMERA_SMOOTH_ALPHA) * c1.y;
+          const palmDist = Math.hypot(chimeraSmoothedPalm0.x - chimeraSmoothedPalm1.x, chimeraSmoothedPalm0.y - chimeraSmoothedPalm1.y);
+          const tipDist = avgFingertipDistance(lm0, lm1);
+          const ext0 = extendedFingerCount(lm0);
+          const ext1 = extendedFingerCount(lm1);
+          const majorityBent0 = ext0 <= 1;
+          const majorityBent1 = ext1 <= 1;
+          const n0 = palmNormalFromLandmarks(lm0);
+          const n1 = palmNormalFromLandmarks(lm1);
+          const midX = (c0.x + c1.x) / 2;
+          const midY = (c0.y + c1.y) / 2;
+          const nearCenter = midX >= CHIMERA_CENTER_X_MIN && midX <= CHIMERA_CENTER_X_MAX && midY >= CHIMERA_CENTER_Y_MIN && midY <= CHIMERA_CENTER_Y_MAX;
+          const dx = c1.x - c0.x;
+          const dy = c1.y - c0.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const ux = dx / len;
+          const uy = dy / len;
+          const hand0PointsToHand1 = n0.x * ux + n0.y * uy > 0.25;
+          const hand1PointsToHand0 = n1.x * (-ux) + n1.y * (-uy) > 0.25;
+          const palmsFacing = hand0PointsToHand1 && hand1PointsToHand0;
+
+          const chimeraConditions = palmDist < CHIMERA_PALM_DIST_MAX && tipDist < CHIMERA_FINGERTIP_AVG_MAX && majorityBent0 && majorityBent1 && nearCenter && palmsFacing;
+
+          if (chimeraConditions) {
+            if (chimeraConfirmStart === 0) chimeraConfirmStart = performance.now();
+            if (performance.now() - chimeraConfirmStart >= CHIMERA_DEBOUNCE_MS) detected = "megumi";
+          } else {
+            chimeraConfirmStart = 0;
+          }
+        } else {
+          chimeraConfirmStart = 0;
+        }
+
         if (results.multiHandLandmarks) {
           results.multiHandLandmarks.forEach((lm: any) => {
             window.drawConnectors(canvasCtx, lm, window.HAND_CONNECTIONS, { color: glowColor, lineWidth: 5 });
             window.drawLandmarks(canvasCtx, lm, { color: "#fff", lineWidth: 1, radius: 2 });
 
-            if (detected === "blood") return;
+            if (detected === "blood" || detected === "megumi") return;
 
             const isUpLm = (tip: number, pip: number) => lm[tip].y < lm[pip].y;
             const pinch = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
@@ -453,8 +534,6 @@ const JJKScene = ({ onTechniqueChange, onHandScreenPositions }: Props) => {
                 detected = "purple";
               } else if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
                 detected = "mahito";
-              } else if (indexUp && !middleUp && !ringUp && pinkyUp) {
-                detected = "megumi";
               } else if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
                 detected = "hakari";
               } else if (indexUp && middleUp && ringUp && !pinkyUp) {
