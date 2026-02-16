@@ -6,7 +6,6 @@
 > cinematic presentation.
 
 ------------------------------------------------------------------------
-
 ## ⚡ Project Overview
 
 **Cursed Energy** is a creative project that explores iconic Domain
@@ -15,6 +14,15 @@ Expansions and cursed techniques from *Jujutsu Kaisen*.
 The objective is to visually demonstrate how specific **hand gestures
 activate different cursed techniques**, inspired by the anime's power
 system.
+
+------------------------------------------------------------------------
+
+###  🎬 Demo Video
+<p>
+
+https://github.com/user-attachments/assets/763119a0-a2e7-486e-9fe8-4629c1aa896f 
+
+</p>
 
 ------------------------------------------------------------------------
 
@@ -48,7 +56,6 @@ system.
 
 ## 🎥 Demonstration Video
 
-------------------------------------------------------------------------
 
 ## 🚀 Tech Stack
 
