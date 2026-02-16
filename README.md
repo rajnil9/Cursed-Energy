@@ -1,9 +1,9 @@
 # 🩸 Cursed Energy
 
-> A fan-inspired creative showcase of **Domain Expansions** and **Cursed
-> Techniques**\
-> from *Jujutsu Kaisen*, visualized through symbolic hand gestures and
-> cinematic presentation.
+ A fan-inspired creative showcase of **Domain Expansions** and **Cursed
+ Techniques**\
+ from *Jujutsu Kaisen*, visualized through symbolic hand gestures and
+ cinematic presentation.
 
 ------------------------------------------------------------------------
 ## ⚡ Project Overview
@@ -17,10 +17,10 @@ system.
 
 ------------------------------------------------------------------------
 
-###  🎬 Demo Video
+###  🎥 Demonstration Video
 <p>
 
-https://github.com/user-attachments/assets/763119a0-a2e7-486e-9fe8-4629c1aa896f 
+https://github.com/user-attachments/assets/f923b0ec-2e8a-469a-b7ce-ec4d07f6d624
 
 </p>
 
@@ -54,7 +54,7 @@ https://github.com/user-attachments/assets/763119a0-a2e7-486e-9fe8-4629c1aa896f
 
 ------------------------------------------------------------------------
 
-## 🎥 Demonstration Video
+
 
 
 ## 🚀 Tech Stack
