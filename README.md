@@ -64,7 +64,7 @@ system.
 ## 🤖 Powered By
 
 This documentation and conceptual structuring was assisted by **Gemini
-3** and **Cursor**.
+3** .
 
 ------------------------------------------------------------------------
 
