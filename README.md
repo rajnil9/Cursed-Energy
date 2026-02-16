@@ -31,15 +31,19 @@ system.
 ## 🧿 Techniques & Domain Expansions
 
 | Hand Gesture | Technique |
-|------------------------------|-----------|
-| Pinch (thumb–index close) | 🟣Hollow Purple |
-| Thumb + pinky up 🤙 | 🧬Self-Embodiment of Perfection |
-| Index + pinky up 🤘 | 🌑Chimera Shadow Garden |
-| Thumb only 👍 | 🎰 Idle Death Gamble |
-| All fingers extended 🖐️ | 🏯Malevolent Shrine |
-| Index + middle up ✌️ | ♾️Infinite Void |
-| Index only ☝️ | 🔴Reverse Cursed Technique: Red |
-| No hand / default | Neutral (subtle blue particles) |
+|--------------|-----------|
+| ☝️ Index finger up only | 🔴 **Reverse Cursed Technique: Red** |
+| ✌️ Index + Middle up | ♾️ **Infinite Void** |
+| 🖖 Middle + Ring up | 🏯 **Malevolent Shrine** |
+| 🤏 Pinch + Middle up | 🟣 **Hollow Purple** |
+| 🤙 Thumb + Pinky up | 🧬 **Self-Embodiment of Perfection** |
+| 👍 Thumbs up (fist + thumb up) | 🎰 **Idle Death Gamble** |
+| 🤘 Index + Pinky up | 🌑 **Chimera Shadow Garden** |
+| ✊ Fist (all fingers closed) | ⚫ **Black Flash** |
+| 🤟 Index + Middle + Ring up | 🔥 **Dismantle** |
+| 🖐️ All fingers + thumb up | 🩸 **Blood Manipulation** |
+| No hand / default | 🔵 **Neutral (subtle blue particles)** |
+
 ------------------------------------------------------------------------
 
 ## 🎥 Demonstration Video
