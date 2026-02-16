@@ -65,10 +65,6 @@ https://github.com/user-attachments/assets/f923b0ec-2e8a-469a-b7ce-ec4d07f6d624
 -   **UI Components:** shadcn/ui (Radix UI)
 -   **3D Graphics:** Three.js
 -   **Hand Tracking:** MediaPipe Hands
--   **Routing:** React Router
--   **State & Data:** TanStack Query
--   **Forms:** React Hook Form
--   **Validation:** Zod
 
 ------------------------------------------------------------------------
 
